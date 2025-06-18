@@ -2,149 +2,309 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Blue Lock - Mini Jogo</title>
+  <title>Blue Lock 2D - Mini Jogo</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #191970;
-      color: #fff;
+      margin: 0;
+      background: #113377;
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      background: #23238e;
-      padding: 2rem;
-      border-radius: 12px;
-      margin-top: 3rem;
-      box-shadow: 0 4px 16px #0007;
-      max-width: 350px;
-      width: 90%;
+      color: #fff;
+      font-family: Arial, sans-serif;
     }
     h1 {
-      text-align: center;
+      margin-top: 24px;
+    }
+    #container {
+      margin-top: 24px;
+      background: #222;
+      border-radius: 10px;
+      box-shadow: 0 8px 32px #0006;
+      padding: 1rem 2rem 2rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    canvas {
+      background: #60b347;
+      border: 4px solid #222;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    #scoreboard {
+      font-size: 1.1rem;
       margin-bottom: 1rem;
     }
-    button {
-      margin: 0.5rem 0;
-      padding: 0.5rem 1rem;
+    #instructions {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      color: #eee;
+    }
+    #restart {
+      display: none;
+      padding: 0.5rem 1.5rem;
       font-size: 1.1rem;
-      border-radius: 6px;
       border: none;
+      border-radius: 7px;
       background: #00bfff;
-      color: #191970;
+      color: #153e6b;
       cursor: pointer;
-      transition: background 0.2s;
+      margin-top: 1rem;
+      transition: background .2s;
     }
-    button:hover {
+    #restart:hover {
       background: #1e90ff;
-    }
-    #result {
-      margin-top: 1rem;
-      font-weight: bold;
-    }
-    #status {
-      margin-top: 0.5rem;
-    }
-    #restartBtn {
-      margin-top: 1rem;
-      background: #ffcc00;
-      color: #191970;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Blue Lock - Mini Jogo</h1>
-    <p id="intro">Você é um atacante tentando se destacar no Blue Lock! Marque o máximo de gols em 3 chances.</p>
-    <div id="challenge"></div>
-    <div id="actions"></div>
-    <div id="result"></div>
-    <div id="status"></div>
-    <button id="restartBtn" style="display:none;">Jogar Novamente</button>
+  <h1>Blue Lock 2D</h1>
+  <div id="container">
+    <div id="scoreboard"></div>
+    <div id="instructions">Movimente-se com as <b>setas</b>. Pressione <b>Espaço</b> para chutar!</div>
+    <canvas id="game" width="500" height="320"></canvas>
+    <button id="restart">Jogar Novamente</button>
   </div>
   <script>
-    const actions = [
-      "driblar o defensor",
-      "chutar de longe",
-      "dar um passe rápido",
-      "fazer um movimento imprevisível"
-    ];
-    const choices = [
-      {id: 1, text: "Força"},
-      {id: 2, text: "Técnica"},
-      {id: 3, text: "Astúcia"}
-    ];
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const scoreboard = document.getElementById('scoreboard');
+    const restartBtn = document.getElementById('restart');
+
+    // Jogo
+    const field = {
+      width: 500,
+      height: 320,
+      goal: {x: 200, y: 10, w: 100, h: 15}
+    };
+
+    let player = {x: 250, y: 270, r: 16, speed: 3};
+    let ball = {x: 250, y: 260, r: 8, speed: 5, vx: 0, vy: 0, moving: false};
+    let goalie = {x: 250, y: 28, r: 18, speed: 2.5, dir: 1};
 
     let score = 0;
     let chances = 3;
-    let gameOver = false;
+    let gameState = 'playing'; // 'playing', 'goal', 'miss', 'over'
 
-    function newChallenge() {
-      if (chances <= 0) {
-        endGame();
+    function drawField() {
+      // Campo
+      ctx.fillStyle = '#60b347';
+      ctx.fillRect(0, 0, field.width, field.height);
+
+      // Gol
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(field.goal.x, field.goal.y, field.goal.w, field.goal.h);
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(field.goal.x, field.goal.y, field.goal.w, 28);
+
+      // Área
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(field.goal.x - 40, field.goal.y + 15, field.goal.w + 80, 55);
+
+      // Linha central
+      ctx.strokeStyle = '#fff8';
+      ctx.beginPath();
+      ctx.moveTo(0, field.height / 2);
+      ctx.lineTo(field.width, field.height / 2);
+      ctx.stroke();
+    }
+
+    function drawPlayer() {
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.r, 0, 2 * Math.PI);
+      ctx.fillStyle = '#2196f3';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.stroke();
+
+      // "Cabeça"
+      ctx.beginPath();
+      ctx.arc(player.x, player.y - 9, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = '#42a5f5';
+      ctx.fill();
+    }
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, 2 * Math.PI);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.strokeStyle = '#222';
+      ctx.stroke();
+      // detalhes
+      ctx.beginPath();
+      ctx.arc(ball.x + 2, ball.y + 2, 2.5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ccc';
+      ctx.fill();
+    }
+
+    function drawGoalie() {
+      ctx.beginPath();
+      ctx.arc(goalie.x, goalie.y, goalie.r, 0, 2 * Math.PI);
+      ctx.fillStyle = '#d32f2f';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.stroke();
+
+      // "Cabeça"
+      ctx.beginPath();
+      ctx.arc(goalie.x, goalie.y - 9, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ef5350';
+      ctx.fill();
+    }
+
+    function updateGoalie() {
+      // Goleiro só se move horizontalmente dentro do gol
+      goalie.x += goalie.dir * goalie.speed;
+      if (goalie.x - goalie.r < field.goal.x) {
+        goalie.x = field.goal.x + goalie.r;
+        goalie.dir *= -1;
+      }
+      if (goalie.x + goalie.r > field.goal.x + field.goal.w) {
+        goalie.x = field.goal.x + field.goal.w - goalie.r;
+        goalie.dir *= -1;
+      }
+    }
+
+    // Movimentação
+    let keys = {};
+    document.addEventListener('keydown', e => {
+      if (gameState === 'playing') {
+        keys[e.key] = true;
+        if (e.key === ' ' && !ball.moving) {
+          kickBall();
+        }
+      }
+    });
+    document.addEventListener('keyup', e => {
+      keys[e.key] = false;
+    });
+
+    function updatePlayer() {
+      if (ball.moving) return;
+      if (keys['ArrowLeft'] && player.x - player.r > 0) player.x -= player.speed;
+      if (keys['ArrowRight'] && player.x + player.r < field.width) player.x += player.speed;
+      if (keys['ArrowUp'] && player.y - player.r > 80) player.y -= player.speed;
+      if (keys['ArrowDown'] && player.y + player.r < field.height) player.y += player.speed;
+      // Bola acompanha o jogador
+      ball.x = player.x;
+      ball.y = player.y - player.r - ball.r - 2;
+    }
+
+    function kickBall() {
+      // Calcula direção para o gol (meio do gol, com leve randomização)
+      const targetX = field.goal.x + field.goal.w/2 + (Math.random()-0.5)*55;
+      const targetY = field.goal.y + field.goal.h + 5;
+      const dx = targetX - ball.x;
+      const dy = targetY - ball.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      ball.vx = ball.speed * dx / dist;
+      ball.vy = ball.speed * dy / dist;
+      ball.moving = true;
+    }
+
+    function updateBall() {
+      if (!ball.moving) return;
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+
+      // Checa colisão com goleiro
+      const distGoalie = Math.hypot(ball.x - goalie.x, ball.y - goalie.y);
+      if (distGoalie < ball.r + goalie.r) {
+        // Defesa!
+        gameState = 'miss';
+        chances--;
+        showResult('Defendido pelo goleiro! 😱');
         return;
       }
-      document.getElementById("result").textContent = "";
-      const action = actions[Math.floor(Math.random() * actions.length)];
-      document.getElementById("challenge").textContent =
-        `Desafio: Você precisa ${action} para marcar o gol.`;
 
-      const actionsDiv = document.getElementById("actions");
-      actionsDiv.innerHTML = "";
-      choices.forEach((choice) => {
-        const btn = document.createElement("button");
-        btn.textContent = choice.text;
-        btn.onclick = () => playTurn(choice.id);
-        actionsDiv.appendChild(btn);
-      });
-      updateStatus();
-    }
-
-    function playTurn(playerChoice) {
-      if (gameOver) return;
-      const correct = Math.floor(Math.random() * 3) + 1; // 1, 2 ou 3
-      if (playerChoice === correct) {
-        document.getElementById("result").textContent = "Sucesso! Você marcou o gol! ⚽️";
+      // Checa se entrou no gol
+      if (
+        ball.y - ball.r <= field.goal.y + field.goal.h &&
+        ball.x >= field.goal.x &&
+        ball.x <= field.goal.x + field.goal.w
+      ) {
+        gameState = 'goal';
         score++;
-      } else {
-        document.getElementById("result").textContent = "Você falhou nesse desafio. 😓";
-        chances--;
+        showResult('GOOOOL! ⚽️');
+        return;
       }
-      updateStatus();
-      setTimeout(newChallenge, 1200);
+
+      // Checa se passou do campo
+      if (ball.y < 0 || ball.x < 0 || ball.x > field.width) {
+        gameState = 'miss';
+        chances--;
+        showResult('Você errou o gol! 😓');
+        return;
+      }
     }
 
-    function updateStatus() {
-      document.getElementById("status").textContent =
-        `Gols: ${score} | Chances restantes: ${chances}`;
+    function showResult(msg) {
+      setTimeout(() => {
+        if (chances === 0) {
+          gameState = 'over';
+          draw();
+          scoreboard.innerHTML = `<b>Fim de jogo!</b> Gols: ${score}<br>` +
+            (score >= 3
+              ? "Você é digno do Blue Lock! 🏆"
+              : "Continue treinando para ser o melhor!");
+          restartBtn.style.display = 'block';
+        } else {
+          scoreboard.innerHTML = msg + `<br>Gols: ${score} | Chances restantes: ${chances}`;
+          resetPositions();
+          setTimeout(() => {
+            scoreboard.innerHTML = `Gols: ${score} | Chances restantes: ${chances}`;
+            gameState = 'playing';
+          }, 1200);
+        }
+      }, 700);
     }
 
-    function endGame() {
-      gameOver = true;
-      document.getElementById("actions").innerHTML = "";
-      document.getElementById("challenge").textContent = "Fim do jogo!";
-      let msg = `Total de gols marcados: ${score}\n`;
-      msg += (score >= 5)
-        ? "Você é digno do Blue Lock! 🏆"
-        : "Continue treinando para ser o melhor!";
-      document.getElementById("result").textContent = msg;
-      document.getElementById("restartBtn").style.display = "inline-block";
+    function resetPositions() {
+      player.x = field.width/2;
+      player.y = field.height-50;
+      ball.x = player.x;
+      ball.y = player.y - player.r - ball.r - 2;
+      ball.vx = 0; ball.vy = 0; ball.moving = false;
+      goalie.x = field.width/2 + Math.random() * 30 - 15;
+      goalie.dir = Math.random() > 0.5 ? 1 : -1;
     }
 
-    document.getElementById("restartBtn").onclick = () => {
+    function draw() {
+      drawField();
+      drawGoalie();
+      drawPlayer();
+      drawBall();
+    }
+
+    function gameLoop() {
+      if (gameState === 'playing') {
+        updatePlayer();
+        updateGoalie();
+        updateBall();
+        scoreboard.innerHTML = `Gols: ${score} | Chances restantes: ${chances}`;
+      }
+      draw();
+      if (gameState !== 'over') {
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    restartBtn.onclick = () => {
       score = 0;
       chances = 3;
-      gameOver = false;
-      document.getElementById("restartBtn").style.display = "none";
-      newChallenge();
+      gameState = 'playing';
+      restartBtn.style.display = 'none';
+      resetPositions();
+      gameLoop();
     };
 
-    // Iniciar o jogo
-    newChallenge();
+    // Inicializa
+    resetPositions();
+    gameLoop();
   </script>
 </body>
 </html>
