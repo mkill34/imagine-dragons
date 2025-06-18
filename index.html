@@ -2,164 +2,204 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Jogo de Romance Interativo</title>
+    <title>Gojo vs Sukuna - Jujutsu Kaisen</title>
     <style>
         body {
+            background: linear-gradient(135deg, #1b1423 0%, #4f2958 100%);
+            color: #fff;
             font-family: 'Segoe UI', sans-serif;
-            background: #ffd1dc;
-            padding: 0;
             margin: 0;
             min-height: 100vh;
         }
         .container {
-            background: #fff;
-            max-width: 500px;
+            max-width: 520px;
             margin: 40px auto;
-            padding: 30px 40px 40px 40px;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+            background: rgba(30,24,40, 0.98);
+            border-radius: 14px;
+            padding: 30px 32px 38px 32px;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.3);
         }
         h1 {
             text-align: center;
-            color: #e75480;
+            color: #ff3867;
+            letter-spacing: 1px;
         }
-        #story {
-            min-height: 120px;
-            font-size: 1.1em;
-            margin-bottom: 30px;
-            color: #444;
+        #scene {
+            margin-bottom: 28px;
+            font-size: 1.13em;
+            min-height: 100px;
         }
         .choices {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 18px;
         }
         button {
-            background: #f78da7;
+            background: #b76cff;
             color: #fff;
             border: none;
             border-radius: 6px;
-            padding: 12px 20px;
-            font-size: 1em;
+            padding: 13px 18px;
+            font-size: 1.04em;
+            font-weight: 500;
             cursor: pointer;
             transition: background 0.2s;
         }
         button:hover {
-            background: #e75480;
+            background: #ff3867;
         }
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px 10px 30px 10px;
-                max-width: 98vw;
-            }
+        .status {
+            margin-bottom: 16px;
+            font-size: 0.98em;
+            color: #ffccf7;
+        }
+        @media (max-width: 650px) {
+            .container { padding: 16px 5vw 24px 5vw; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Jogo de Romance</h1>
-        <div id="story"></div>
+        <h1>Gojo vs Sukuna</h1>
+        <div class="status" id="status"></div>
+        <div id="scene"></div>
         <div class="choices"></div>
     </div>
     <script>
-        // Estrutura básica do jogo
+        // Estado dos personagens
+        let state = {
+            gojoHP: 100,
+            sukunaHP: 100
+        };
+
+        // Cenas do jogo
         const scenes = {
             inicio: {
-                texto: "Você está em uma cafeteria charmosa quando vê alguém especial sentado sozinho. O que você faz?",
+                texto: "No campo de batalha, Gojo Satoru encara Ryomen Sukuna. O ar treme com a energia amaldiçoada! Quem será o vencedor?",
                 escolhas: [
-                    { texto: "Aproxima-se e diz oi.", proxima: "oi" },
-                    { texto: "Espera e observa de longe.", proxima: "espera" }
+                    { texto: "Começar a batalha!", prox: "gojoInicia" }
                 ]
             },
-            oi: {
-                texto: "Você se aproxima e diz oi. A pessoa sorri. \"Oi! Gosta de café?\"",
+            gojoInicia: {
+                texto: "Gojo toma a dianteira! Qual técnica usar?",
                 escolhas: [
-                    { texto: "Sim, adoro café!", proxima: "gostaDeCafe" },
-                    { texto: "Prefiro chá.", proxima: "prefereCha" }
+                    { texto: "Usar Limitless - Azul", prox: "gojoAzul" },
+                    { texto: "Ativar o Infinito", prox: "gojoInfinito" }
                 ]
             },
-            espera: {
-                texto: "Você observa de longe, mas outra pessoa se aproxima e começa a conversar. Você sente uma leve pontada de ciúmes.",
+            gojoAzul: {
+                texto: "Gojo dispara 'Azul', criando uma distorção que suga tudo ao redor!",
+                efeito: () => {
+                    state.sukunaHP -= 30;
+                },
                 escolhas: [
-                    { texto: "Toma coragem e vai falar também.", proxima: "oi" },
-                    { texto: "Vai embora e tenta esquecer.", proxima: "fimTriste" }
+                    { texto: "Sukuna contra-ataca!", prox: "sukunaContra1" }
                 ]
             },
-            gostaDeCafe: {
-                texto: "\"Que bom! O café daqui é ótimo. Quer sentar comigo?\"",
+            gojoInfinito: {
+                texto: "Gojo ativa o Infinito, tornando-se intocável por ataques físicos! Sukuna analisa a situação.",
+                efeito: () => {
+                    // Defesa, Sukuna erra o ataque
+                },
                 escolhas: [
-                    { texto: "Senta e começa a conversar.", proxima: "conversa" },
-                    { texto: "Fica nervoso(a) e recusa.", proxima: "fimTimidez" }
+                    { texto: "Sukuna tenta atacar!", prox: "sukunaErra" }
                 ]
             },
-            prefereCha: {
-                texto: "\"Interessante! Eu também gosto de chá. Quer sentar comigo?\"",
+            sukunaContra1: {
+                texto: "Sukuna ri e lança 'Corte Dismantle'!",
+                efeito: () => {
+                    state.gojoHP -= 20;
+                },
                 escolhas: [
-                    { texto: "Senta e começa a conversar.", proxima: "conversa" },
-                    { texto: "Fica tímido(a) e recusa.", proxima: "fimTimidez" }
+                    { texto: "Gojo prepara o próximo ataque!", prox: "gojoSegundoTurno" }
                 ]
             },
-            conversa: {
-                texto: "A conversa flui naturalmente. Vocês descobrem muitos interesses em comum. O clima é ótimo.",
+            sukunaErra: {
+                texto: "O ataque de Sukuna para no Infinito de Gojo — ele não consegue atingi-lo!",
                 escolhas: [
-                    { texto: "Convida para um passeio no parque.", proxima: "passeio" },
-                    { texto: "Pede o número de telefone.", proxima: "telefone" }
+                    { texto: "Gojo ataca agora!", prox: "gojoSegundoTurno" }
                 ]
             },
-            passeio: {
-                texto: "O passeio no parque é agradável e romântico. Vocês se aproximam ainda mais.",
+            gojoSegundoTurno: {
+                texto: "Gojo sorri confiante. Qual técnica agora?",
                 escolhas: [
-                    { texto: "Tenta dar as mãos.", proxima: "maoDados" },
-                    { texto: "Apenas caminha ao lado.", proxima: "caminha" }
+                    { texto: "Usar Hollow Purple", prox: "hollowPurple" },
+                    { texto: "Ativar Expansão de Domínio", prox: "dominioGojo" }
                 ]
             },
-            telefone: {
-                texto: "A pessoa sorri e te passa o número. Vocês continuam conversando pelo celular e marcam um novo encontro.",
+            hollowPurple: {
+                texto: "Gojo reúne Azul e Vermelho e lança Hollow Purple! Uma esfera destrutiva avança sobre Sukuna!",
+                efeito: () => {
+                    state.sukunaHP -= 50;
+                },
                 escolhas: [
-                    { texto: "Final Feliz! Vocês começam a namorar.", proxima: "fimFeliz" }
+                    { texto: "Sukuna resiste e prepara seu domínio!", prox: "dominioSukuna" }
                 ]
             },
-            maoDados: {
-                texto: "Vocês dão as mãos e sentem uma conexão especial. O romance está no ar.",
+            dominioGojo: {
+                texto: "Gojo ativa 'Ilimitado Vazio'! O tempo e espaço se distorcem na mente de Sukuna.",
+                efeito: () => {
+                    state.sukunaHP -= 40;
+                },
                 escolhas: [
-                    { texto: "Final Feliz! Vocês se apaixonam.", proxima: "fimFeliz" }
+                    { texto: "Sukuna luta para se libertar!", prox: "dominioSukuna" }
                 ]
             },
-            caminha: {
-                texto: "Vocês caminham lado a lado, apreciando a companhia um do outro. O tempo passa voando.",
+            dominioSukuna: {
+                texto: "Sukuna ativa 'Santuário Malevolente'! O espaço é distorcido e Gojo é atingido por cortes múltiplos!",
+                efeito: () => {
+                    state.gojoHP -= 35;
+                },
                 escolhas: [
-                    { texto: "Final Feliz! Vocês continuam se encontrando.", proxima: "fimFeliz" }
+                    { texto: "Final da batalha!", prox: "final" }
                 ]
             },
-            fimFeliz: {
-                texto: "Parabéns! Você encontrou o amor. 💖",
+            final: {
+                texto: () => {
+                    let resultado = '';
+                    if (state.gojoHP > state.sukunaHP) {
+                        resultado = "Com um sorriso, Gojo permanece de pé, enquanto Sukuna cai de joelhos. Gojo vence a batalha!";
+                    } else if (state.gojoHP < state.sukunaHP) {
+                        resultado = "Sukuna ri triunfante enquanto Gojo cai, esgotado. Sukuna vence!";
+                    } else {
+                        resultado = "Ambos estão exaustos, mas nenhum cai. É um empate lendário!";
+                    }
+                    return resultado + "<br><br>Deseja jogar novamente?";
+                },
                 escolhas: [
-                    { texto: "Jogar novamente", proxima: "inicio" }
+                    { texto: "Reiniciar", prox: "reset" }
                 ]
             },
-            fimTimidez: {
-                texto: "Você recusou o convite por timidez. Talvez numa próxima vez tenha mais coragem!",
+            reset: {
+                efeito: () => {
+                    state.gojoHP = 100;
+                    state.sukunaHP = 100;
+                },
                 escolhas: [
-                    { texto: "Jogar novamente", proxima: "inicio" }
-                ]
-            },
-            fimTriste: {
-                texto: "Você vai embora e fica pensando no que poderia ter acontecido... Fim.",
-                escolhas: [
-                    { texto: "Jogar novamente", proxima: "inicio" }
+                    { texto: "Começar!", prox: "inicio" }
                 ]
             }
         };
 
-        function mostrarCena(cena) {
-            const scene = scenes[cena];
-            document.getElementById('story').innerText = scene.texto;
+        function mostrarCena(cenaKey) {
+            const cena = scenes[cenaKey];
+            // Aplica efeitos de dano ou cura se houver
+            if (cena.efeito) cena.efeito();
+
+            // Atualiza status
+            document.getElementById('status').innerHTML = `Gojo HP: <b>${state.gojoHP}</b> | Sukuna HP: <b>${state.sukunaHP}</b>`;
+
+            // Mostra texto da cena
+            const texto = typeof cena.texto === "function" ? cena.texto() : cena.texto;
+            document.getElementById('scene').innerHTML = texto;
+
+            // Mostra escolhas
             const choicesDiv = document.querySelector('.choices');
             choicesDiv.innerHTML = '';
-            scene.escolhas.forEach((escolha, idx) => {
+            cena.escolhas.forEach(escolha => {
                 const btn = document.createElement('button');
                 btn.innerText = escolha.texto;
-                btn.onclick = () => mostrarCena(escolha.proxima);
+                btn.onclick = () => mostrarCena(escolha.prox);
                 choicesDiv.appendChild(btn);
             });
         }
