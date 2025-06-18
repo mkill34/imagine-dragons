@@ -1,178 +1,53 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Mini Terraria HTML</title>
+  <title>O Botão Proibido (Censurado!)</title>
   <style>
-    body { background: #333; margin: 0; overflow: hidden; }
-    canvas { display: block; margin: 0 auto; background: #87CEEB; }
-    #help {
-      position: absolute; top: 10px; left: 10px; color: #fff; background: rgba(0,0,0,0.5);
-      padding: 10px; border-radius: 6px; font-family: sans-serif; z-index: 10;
+    body { background: #191919; color: #fff; font-family: sans-serif; text-align: center; margin-top: 80px; }
+    #btn { 
+      font-size: 2em; 
+      padding: 30px 60px; 
+      margin: 40px auto; 
+      background: #d11a1a; 
+      color: #fff; 
+      border: none; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      box-shadow: 0 4px 24px #d11a1a55;
+      transition: transform 0.1s;
     }
+    #btn:active { transform: scale(0.95); }
+    #censurado {
+      font-size: 3em;
+      color: #faf35a;
+      margin-top: 40px;
+      letter-spacing: 4px;
+    }
+    #msg { margin-top: 25px; font-size: 1.3em; }
   </style>
 </head>
 <body>
-<div id="help">
-  <b>Mini Terraria</b><br>
-  Setas = mover<br>
-  Espaço = pular<br>
-  Clique esquerdo = remover bloco<br>
-  Clique direito = colocar bloco<br>
-</div>
-<canvas id="game" width="800" height="600"></canvas>
-<script>
-/* ---- Configurações ---- */
-
-const tileSize = 32;
-const worldWidth = 25;
-const worldHeight = 18;
-const groundLevel = 10; // altura do chão
-
-// Tipos de bloco
-const tileTypes = [
-  { name: 'ar', color: '#87CEEB', solid: false },
-  { name: 'terra', color: '#A0522D', solid: true },
-  { name: 'grama', color: '#228B22', solid: true },
-  { name: 'pedra', color: '#888', solid: true }
-];
-
-// Cria um mundo simples (ar, grama, terra, pedra)
-let world = [];
-for(let y=0; y<worldHeight; y++) {
-  let row = [];
-  for(let x=0; x<worldWidth; x++) {
-    if(y < groundLevel-1) row.push(0); // ar
-    else if(y === groundLevel-1) row.push(2); // grama
-    else if(y < groundLevel+2) row.push(1); // terra
-    else row.push(3); // pedra
-  }
-  world.push(row);
-}
-
-// Player
-let player = {
-  x: 5, y: groundLevel-3, vx: 0, vy: 0, width: 0.8, height: 0.9,
-  onGround: false
-};
-
-// Input
-let keys = {};
-document.addEventListener('keydown', e => keys[e.key] = true);
-document.addEventListener('keyup', e => keys[e.key] = false);
-
-// Physics
-const gravity = 0.25;
-const jumpPower = 6;
-const moveSpeed = 0.15;
-const maxSpeed = 2;
-
-// Game loop
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-
-function updatePlayer() {
-  // Movimento lateral
-  if(keys['ArrowLeft']) player.vx -= moveSpeed;
-  if(keys['ArrowRight']) player.vx += moveSpeed;
-  player.vx *= 0.9;
-  if(Math.abs(player.vx) > maxSpeed) player.vx = Math.sign(player.vx) * maxSpeed;
-
-  // Gravidade
-  player.vy += gravity;
-  if(player.vy > 8) player.vy = 8;
-
-  // Pulo
-  if(keys[' '] && player.onGround) {
-    player.vy = -jumpPower;
-    player.onGround = false;
-  }
-
-  // Movimentação e colisão
-  let newX = player.x + player.vx;
-  let newY = player.y + player.vy;
-
-  // Colisão no eixo X
-  if(!collide(newX, player.y, player.width, player.height)) {
-    player.x = newX;
-  } else {
-    player.vx = 0;
-  }
-  // Colisão no eixo Y
-  if(!collide(player.x, newY, player.width, player.height)) {
-    player.y = newY;
-    player.onGround = false;
-  } else {
-    // Bateu em bloco
-    if(player.vy > 0) player.onGround = true;
-    player.vy = 0;
-  }
-}
-
-function collide(x, y, w, h) {
-  let x0 = Math.floor(x);
-  let x1 = Math.floor(x + w-0.1);
-  let y0 = Math.floor(y);
-  let y1 = Math.floor(y + h-0.1);
-  for(let i=x0; i<=x1; i++) {
-    for(let j=y0; j<=y1; j++) {
-      if(i<0||j<0||i>=worldWidth||j>=worldHeight) return true;
-      if(tileTypes[world[j][i]].solid) return true;
+  <h1>⚠️ NÃO TOQUE NO BOTÃO PROIBIDO! ⚠️</h1>
+  <button id="btn">BOTÃO PROIBIDO</button>
+  <div id="censurado" style="display:none;">CENSURADO!</div>
+  <div id="msg"></div>
+  <script>
+    let frases = [
+      "Eu avisei para não tocar...",
+      "Agora você liberou o modo censurado!",
+      "O que você esperava que acontecesse?",
+      "A curiosidade matou o gato — e censurou o jogo.",
+      "Você desbloqueou... nada! Só censura mesmo.",
+      "Este conteúdo foi removido para sua segurança.",
+      "Parabéns, você venceu o jogo da tentação."
+    ];
+    document.getElementById('btn').onclick = function() {
+      document.getElementById('censurado').style.display = "block";
+      document.getElementById('msg').innerText = frases[Math.floor(Math.random() * frases.length)];
+      this.disabled = true;
+      this.style.opacity = 0.5;
     }
-  }
-  return false;
-}
-
-// Mouse: quebrar e colocar blocos
-canvas.addEventListener('mousedown', e => {
-  let rect = canvas.getBoundingClientRect();
-  let mx = Math.floor((e.clientX - rect.left) / tileSize);
-  let my = Math.floor((e.clientY - rect.top) / tileSize);
-  if(mx<0||my<0||mx>=worldWidth||my>=worldHeight) return;
-
-  // Não pode modificar bloco onde o jogador está
-  if(
-    mx >= Math.floor(player.x) && mx <= Math.floor(player.x + player.width-0.01) &&
-    my >= Math.floor(player.y) && my <= Math.floor(player.y + player.height-0.01)
-  ) return;
-
-  if(e.button === 0) { // Quebrar bloco
-    if(world[my][mx] !== 0) world[my][mx] = 0;
-  } else if(e.button === 2) { // Colocar bloco de terra
-    if(world[my][mx] === 0) world[my][mx] = 1;
-  }
-});
-canvas.addEventListener('contextmenu', e => e.preventDefault());
-
-function draw() {
-  // Fundo
-  ctx.fillStyle = tileTypes[0].color;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  // Blocos
-  for(let y=0; y<worldHeight; y++) {
-    for(let x=0; x<worldWidth; x++) {
-      let t = world[y][x];
-      if(t === 0) continue;
-      ctx.fillStyle = tileTypes[t].color;
-      ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
-      ctx.strokeStyle = "#000"; ctx.strokeRect(x*tileSize, y*tileSize, tileSize, tileSize);
-    }
-  }
-
-  // Player
-  ctx.fillStyle = '#FFD700';
-  ctx.fillRect(player.x*tileSize, player.y*tileSize, player.width*tileSize, player.height*tileSize);
-  ctx.strokeStyle = '#000'; ctx.strokeRect(player.x*tileSize, player.y*tileSize, player.width*tileSize, player.height*tileSize);
-}
-
-function loop() {
-  updatePlayer();
-  draw();
-  requestAnimationFrame(loop);
-}
-
-loop();
-</script>
+  </script>
 </body>
 </html>
