@@ -2,69 +2,130 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Chat com Copilot (Backend Genérico)</title>
+  <title>Chat com Personagens Fictícios</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #222; color: #f2f2f2; }
-    #chatbox { width: 90%; max-width: 600px; margin: 40px auto; padding: 20px; background: #333; border-radius: 8px; }
-    .msg { margin: 15px 0; }
-    .user { text-align: right; color: #8fe1a2; }
-    .bot { text-align: left; color: #7dbbff; }
-    #inputRow { display: flex; margin-top: 20px; }
+    body { font-family: Arial, sans-serif; background: #23272f; color: #f2f2f2; }
+    #container { width: 95%; max-width: 600px; margin: 40px auto; padding: 24px; background: #323846; border-radius: 10px; }
+    h2 { text-align: center; margin-bottom: 16px; }
+    #personagemRow { margin-bottom: 18px; }
+    #personagemSelect { padding: 7px; border-radius: 5px; border: none; }
+    #chatbox { min-height: 240px; max-height: 340px; overflow-y: auto; margin-bottom: 20px; padding: 10px; background: #262c38; border-radius: 7px; }
+    .msg { margin: 10px 0; }
+    .user { text-align: right; color: #a0e4b0; }
+    .bot { text-align: left; color: #83bbff; }
+    #inputRow { display: flex; }
     #userInput { flex: 1; padding: 10px; border-radius: 5px; border: none; }
     #sendBtn { padding: 10px 16px; background: #5b9aff; color: #fff; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
   </style>
 </head>
 <body>
-  <div id="chatbox">
-    <h2>Copilot Chat (Backend Genérico)</h2>
-    <div id="messages"></div>
+  <div id="container">
+    <h2>Converse com um Personagem Fictício</h2>
+    <div id="personagemRow">
+      <label for="personagemSelect">Escolha o personagem:</label>
+      <select id="personagemSelect">
+        <option value="gandalf">Gandalf (O Senhor dos Anéis)</option>
+        <option value="darth_vader">Darth Vader (Star Wars)</option>
+        <option value="sherlock">Sherlock Holmes</option>
+        <option value="pikachu">Pikachu (Pokémon)</option>
+        <option value="ironman">Homem de Ferro (Marvel)</option>
+      </select>
+    </div>
+    <div id="chatbox"></div>
     <div id="inputRow">
-      <input type="text" id="userInput" placeholder="Digite sua pergunta..." autocomplete="off" />
+      <input type="text" id="userInput" placeholder="Digite sua mensagem..." autocomplete="off" />
       <button id="sendBtn">Enviar</button>
     </div>
   </div>
   <script>
-    const BACKEND_URL = "http://localhost:5000/pergunte"; // Altere conforme o endpoint do seu Copilot
+    // Respostas fictícias por personagem
+    const personagens = {
+      gandalf: {
+        nome: "Gandalf",
+        prefix: "Gandalf diz:",
+        respostas: [
+          "Tudo o que temos de decidir é o que fazer com o tempo que nos é dado.",
+          "Você não passará!",
+          "Até o menor pode mudar o curso do futuro.",
+          "Tenha coragem, meu amigo. Há sempre esperança.",
+          "Nunca se esqueça de que a verdadeira sabedoria está em saber que nada sabemos."
+        ]
+      },
+      darth_vader: {
+        nome: "Darth Vader",
+        prefix: "Darth Vader:",
+        respostas: [
+          "Eu sou seu pai.",
+          "Sinta o poder do lado sombrio da Força.",
+          "Sua falta de fé é perturbadora.",
+          "Junte-se a mim e juntos dominaremos a galáxia.",
+          "A Força é forte com você."
+        ]
+      },
+      sherlock: {
+        nome: "Sherlock Holmes",
+        prefix: "Sherlock Holmes:",
+        respostas: [
+          "Elementar, meu caro Watson.",
+          "Observe tudo, e não descarte nada.",
+          "A solução geralmente é mais simples do que parece.",
+          "Você percebe, mas não observa.",
+          "Nada escapa aos meus olhos atentos."
+        ]
+      },
+      pikachu: {
+        nome: "Pikachu",
+        prefix: "Pikachu:",
+        respostas: [
+          "Pika, pika!",
+          "Pikachu!",
+          "Pika-pika-chu!",
+          "Pikaaaaaa!",
+          "Pika?"
+        ]
+      },
+      ironman: {
+        nome: "Homem de Ferro",
+        prefix: "Homem de Ferro:",
+        respostas: [
+          "Eu sou o Homem de Ferro.",
+          "Gênio, bilionário, playboy, filantropo.",
+          "Vamos salvar o mundo... de novo.",
+          "Jarvis, prepare minha armadura.",
+          "Tenho um plano. Não é um bom plano, mas é um plano."
+        ]
+      }
+    };
 
-    const messagesDiv = document.getElementById('messages');
+    const chatbox = document.getElementById('chatbox');
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
+    const personagemSelect = document.getElementById('personagemSelect');
 
     function addMessage(text, sender) {
       const msgDiv = document.createElement('div');
       msgDiv.className = 'msg ' + sender;
       msgDiv.innerHTML = text;
-      messagesDiv.appendChild(msgDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      chatbox.appendChild(msgDiv);
+      chatbox.scrollTop = chatbox.scrollHeight;
     }
 
-    async function askCopilot(question) {
-      addMessage(question, 'user');
-      addMessage('Pensando...', 'bot');
-      try {
-        const res = await fetch(BACKEND_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pergunta: question }) // Altere o formato conforme seu backend
-        });
-        const data = await res.json();
-        document.querySelectorAll('.bot').forEach(el => {
-          if (el.innerText === 'Pensando...') el.remove();
-        });
-        addMessage(data.resposta || JSON.stringify(data), 'bot');
-      } catch (e) {
-        document.querySelectorAll('.bot').forEach(el => {
-          if (el.innerText === 'Pensando...') el.remove();
-        });
-        addMessage('Erro ao conectar ao backend Copilot.', 'bot');
-      }
+    function respostaPersonagem(personagemKey, pergunta) {
+      const personagem = personagens[personagemKey];
+      // Resposta fictícia escolhida aleatoriamente
+      const idx = Math.floor(Math.random() * personagem.respostas.length);
+      return `${personagem.prefix} ${personagem.respostas[idx]}`;
     }
 
     sendBtn.onclick = () => {
       const q = userInput.value.trim();
       if (q) {
-        askCopilot(q);
+        const personagemSelecionado = personagemSelect.value;
+        addMessage(q, 'user');
         userInput.value = '';
+        setTimeout(() => {
+          addMessage(respostaPersonagem(personagemSelecionado, q), 'bot');
+        }, 600);
       }
     };
 
