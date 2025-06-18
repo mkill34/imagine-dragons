@@ -1,242 +1,150 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Itadori vs Sukuna - Jujutsu Kaisen (Mangá)</title>
-    <style>
-        body {
-            background: linear-gradient(135deg, #1a1320 0%, #7e264e 100%);
-            color: #fff;
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 540px;
-            margin: 40px auto;
-            background: rgba(25,20,32, 0.98);
-            border-radius: 14px;
-            padding: 32px 36px 40px 36px;
-            box-shadow: 0 12px 36px rgba(0,0,0,0.3);
-        }
-        h1 {
-            text-align: center;
-            color: #ff3867;
-            letter-spacing: 1px;
-        }
-        #scene {
-            margin-bottom: 24px;
-            font-size: 1.13em;
-            min-height: 100px;
-        }
-        .choices {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        button {
-            background: #b76cff;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 13px 18px;
-            font-size: 1.04em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background: #ff3867;
-        }
-        .status {
-            margin-bottom: 16px;
-            font-size: 0.98em;
-            color: #ffccf7;
-        }
-        .death {
-            color: #ff3867;
-            font-weight: bold;
-        }
-        .manga {
-            font-size: 0.98em;
-            color: #b3e5fc;
-            margin-bottom: 1em;
-        }
-        @media (max-width: 650px) {
-            .container { padding: 16px 5vw 24px 5vw; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Blue Lock - Mini Jogo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #191970;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      background: #23238e;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-top: 3rem;
+      box-shadow: 0 4px 16px #0007;
+      max-width: 350px;
+      width: 90%;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    button {
+      margin: 0.5rem 0;
+      padding: 0.5rem 1rem;
+      font-size: 1.1rem;
+      border-radius: 6px;
+      border: none;
+      background: #00bfff;
+      color: #191970;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #1e90ff;
+    }
+    #result {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    #status {
+      margin-top: 0.5rem;
+    }
+    #restartBtn {
+      margin-top: 1rem;
+      background: #ffcc00;
+      color: #191970;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Itadori vs Sukuna<br><span style="font-size:0.7em;font-weight:400;">(Baseado no mangá)</span></h1>
-        <div class="manga">
-            <b>Atenção:</b> Este jogo contém spoilers do mangá de Jujutsu Kaisen!
-        </div>
-        <div class="status" id="status"></div>
-        <div id="scene"></div>
-        <div class="choices"></div>
-    </div>
-    <script>
-        // Estado dos personagens
-        let state = {
-            itadoriHP: 100,
-            sukunaHP: 100,
-            mahorgaInvocado: false,
-            itadoriDespertou: false,
-            itadoriMorto: false,
-            sukunaDerrotado: false,
-        };
+  <div class="container">
+    <h1>Blue Lock - Mini Jogo</h1>
+    <p id="intro">Você é um atacante tentando se destacar no Blue Lock! Marque o máximo de gols em 3 chances.</p>
+    <div id="challenge"></div>
+    <div id="actions"></div>
+    <div id="result"></div>
+    <div id="status"></div>
+    <button id="restartBtn" style="display:none;">Jogar Novamente</button>
+  </div>
+  <script>
+    const actions = [
+      "driblar o defensor",
+      "chutar de longe",
+      "dar um passe rápido",
+      "fazer um movimento imprevisível"
+    ];
+    const choices = [
+      {id: 1, text: "Força"},
+      {id: 2, text: "Técnica"},
+      {id: 3, text: "Astúcia"}
+    ];
 
-        // Cenas do jogo
-        const scenes = {
-            inicio: {
-                texto: "O confronto final! Yuji Itadori, agora mais forte do que nunca, encara Sukuna, o Rei das Maldições, em Shinjuku.<br>Todos observam o destino do mundo ser decidido.",
-                escolhas: [
-                    { texto: "Itadori ataca primeiro!", prox: "itadoriAtaque" },
-                    { texto: "Sukuna provoca Itadori!", prox: "sukunaProvoca" }
-                ]
-            },
-            itadoriAtaque: {
-                texto: "Itadori avança com sua força monstruosa, usando Black Flash! Sukuna sente o impacto.",
-                efeito: () => {
-                    state.sukunaHP -= 25;
-                },
-                escolhas: [
-                    { texto: "Sukuna ativa domínio!", prox: "sukunaDominio" },
-                    { texto: "Sukuna invoca Mahoraga!", prox: "sukunaMahoraga" }
-                ]
-            },
-            sukunaProvoca: {
-                texto: "Sukuna sorri e provoca: \"É só isso que você tem, Yuji?\" O ambiente se enche de tensão.",
-                escolhas: [
-                    { texto: "Itadori desperta sua verdadeira força!", prox: "itadoriDespertar" }
-                ]
-            },
-            itadoriDespertar: {
-                texto: "A raiva e determinação de Itadori fazem sua energia amaldiçoada explodir. Ele entende o propósito de seus amigos e sente o apoio de todos.",
-                efeito: () => {
-                    state.itadoriDespertou = true;
-                    state.sukunaHP -= 15;
-                },
-                escolhas: [
-                    { texto: "Itadori ataca com tudo!", prox: "itadoriBlackFlashCombo" }
-                ]
-            },
-            itadoriBlackFlashCombo: {
-                texto: "Itadori acerta uma sequência de Black Flashs! Sukuna é surpreendido pela força de vontade de Yuji.",
-                efeito: () => {
-                    state.sukunaHP -= 35;
-                },
-                escolhas: [
-                    { texto: "Sukuna invoca Mahoraga!", prox: "sukunaMahoraga" },
-                    { texto: "Sukuna ativa domínio!", prox: "sukunaDominio" }
-                ]
-            },
-            sukunaDominio: {
-                texto: "Sukuna ativa o 'Santuário Malevolente'. Cortes multidimensionais ameaçam Itadori!",
-                efeito: () => {
-                    if (state.itadoriDespertou) {
-                        state.itadoriHP -= 20;
-                    } else {
-                        state.itadoriHP -= 35;
-                    }
-                },
-                escolhas: [
-                    { texto: "Itadori resiste e contra-ataca!", prox: "itadoriResiste" }
-                ]
-            },
-            sukunaMahoraga: {
-                texto: "Sukuna invoca Mahoraga para pressionar Itadori. A luta se torna desesperadora!",
-                efeito: () => {
-                    state.mahorgaInvocado = true;
-                    state.itadoriHP -= 30;
-                },
-                escolhas: [
-                    { texto: "Itadori luta com Mahoraga!", prox: "itadoriVsMahoraga" }
-                ]
-            },
-            itadoriVsMahoraga: {
-                texto: "Itadori, usando sua criatividade e poder, consegue lidar com Mahoraga. Ele se sacrifica, mas destrói o Shikigami.",
-                efeito: () => {
-                    state.itadoriHP -= 15;
-                    state.sukunaHP -= 20;
-                },
-                escolhas: [
-                    { texto: "Enfrentar Sukuna!", prox: "climax" }
-                ]
-            },
-            itadoriResiste: {
-                texto: "Mesmo ferido, Yuji se levanta. Lembra de suas promessas e de todos que lutaram por ele. Sua energia amaldiçoada se eleva ao máximo.",
-                escolhas: [
-                    { texto: "Itadori acerta o soco decisivo!", prox: "final" }
-                ]
-            },
-            climax: {
-                texto: "Ambos exaustos, Itadori e Sukuna trocam golpes ferozes. O próximo ataque decidirá tudo!",
-                escolhas: [
-                    { texto: "Itadori reúne toda sua força!", prox: "final" }
-                ]
-            },
-            final: {
-                texto: () => {
-                    if (state.sukunaHP <= 0 || (state.itadoriDespertou && state.sukunaHP < 30)) {
-                        state.sukunaDerrotado = true;
-                        return "<span class='death'>Com um grito, Itadori desfere o golpe final. Sukuna finalmente cai, derrotado!<br><br>O mundo é salvo graças à determinação de Yuji e seus amigos.</span><br><br><b>Fim do jogo (baseado no mangá)</b><br><br>Deseja jogar novamente?";
-                    } else if (state.itadoriHP <= 0) {
-                        state.itadoriMorto = true;
-                        return "<span class='death'>Itadori cai, vencido pelo poder avassalador de Sukuna.<br><br>O Rei das Maldições triunfa... mas o mundo ainda resiste à esperança.</span><br><br><b>Fim do jogo</b><br><br>Deseja tentar outro caminho?";
-                    } else {
-                        return "A luta continua, mas ambos estão no limite. Qual será seu próximo passo?";
-                    }
-                },
-                escolhas: [
-                    { texto: "Jogar novamente", prox: "reset" }
-                ]
-            },
-            reset: {
-                efeito: () => {
-                    state.itadoriHP = 100;
-                    state.sukunaHP = 100;
-                    state.mahorgaInvocado = false;
-                    state.itadoriDespertou = false;
-                    state.itadoriMorto = false;
-                    state.sukunaDerrotado = false;
-                },
-                escolhas: [
-                    { texto: "Começar!", prox: "inicio" }
-                ]
-            }
-        };
+    let score = 0;
+    let chances = 3;
+    let gameOver = false;
 
-        function mostrarCena(cenaKey) {
-            const cena = scenes[cenaKey];
-            // Aplica efeitos se houver
-            if (cena.efeito) cena.efeito();
+    function newChallenge() {
+      if (chances <= 0) {
+        endGame();
+        return;
+      }
+      document.getElementById("result").textContent = "";
+      const action = actions[Math.floor(Math.random() * actions.length)];
+      document.getElementById("challenge").textContent =
+        `Desafio: Você precisa ${action} para marcar o gol.`;
 
-            // Atualiza status
-            let st = `Itadori HP: <b>${state.itadoriHP}</b> | Sukuna HP: <b>${state.sukunaHP}</b>`;
-            if(state.itadoriMorto) st += " <span class='death'>Itadori está morto!</span>";
-            if(state.sukunaDerrotado) st += " <span class='death'>Sukuna foi derrotado!</span>";
-            document.getElementById('status').innerHTML = st;
+      const actionsDiv = document.getElementById("actions");
+      actionsDiv.innerHTML = "";
+      choices.forEach((choice) => {
+        const btn = document.createElement("button");
+        btn.textContent = choice.text;
+        btn.onclick = () => playTurn(choice.id);
+        actionsDiv.appendChild(btn);
+      });
+      updateStatus();
+    }
 
-            // Mostra texto da cena
-            const texto = typeof cena.texto === "function" ? cena.texto() : cena.texto;
-            document.getElementById('scene').innerHTML = texto;
+    function playTurn(playerChoice) {
+      if (gameOver) return;
+      const correct = Math.floor(Math.random() * 3) + 1; // 1, 2 ou 3
+      if (playerChoice === correct) {
+        document.getElementById("result").textContent = "Sucesso! Você marcou o gol! ⚽️";
+        score++;
+      } else {
+        document.getElementById("result").textContent = "Você falhou nesse desafio. 😓";
+        chances--;
+      }
+      updateStatus();
+      setTimeout(newChallenge, 1200);
+    }
 
-            // Mostra escolhas
-            const choicesDiv = document.querySelector('.choices');
-            choicesDiv.innerHTML = '';
-            cena.escolhas.forEach(escolha => {
-                const btn = document.createElement('button');
-                btn.innerText = escolha.texto;
-                btn.onclick = () => mostrarCena(escolha.prox);
-                choicesDiv.appendChild(btn);
-            });
-        }
+    function updateStatus() {
+      document.getElementById("status").textContent =
+        `Gols: ${score} | Chances restantes: ${chances}`;
+    }
 
-        // Iniciar o jogo
-        mostrarCena('inicio');
-    </script>
+    function endGame() {
+      gameOver = true;
+      document.getElementById("actions").innerHTML = "";
+      document.getElementById("challenge").textContent = "Fim do jogo!";
+      let msg = `Total de gols marcados: ${score}\n`;
+      msg += (score >= 5)
+        ? "Você é digno do Blue Lock! 🏆"
+        : "Continue treinando para ser o melhor!";
+      document.getElementById("result").textContent = msg;
+      document.getElementById("restartBtn").style.display = "inline-block";
+    }
+
+    document.getElementById("restartBtn").onclick = () => {
+      score = 0;
+      chances = 3;
+      gameOver = false;
+      document.getElementById("restartBtn").style.display = "none";
+      newChallenge();
+    };
+
+    // Iniciar o jogo
+    newChallenge();
+  </script>
 </body>
 </html>
