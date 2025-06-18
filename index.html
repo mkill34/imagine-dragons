@@ -98,56 +98,142 @@
         </form>
     </div>
     <script>
-        const characterPresets = {
+        // Personagens, sentimentos e respostas variadas
+        const characterData = {
             harry: {
                 name: "Harry Potter",
-                prompt: "Responda como Harry Potter, um jovem mago corajoso, gentil e leal, usando expressões britânicas e referenciando Hogwarts e magia."
+                emotionalReplies: [
+                    { emotion: "feliz", replies: [
+                        "Estou me sentindo muito bem hoje! Em Hogwarts, dias felizes são os melhores.",
+                        "Nada como um bom feitiço bem sucedido para me deixar animado!",
+                        "Sinto uma alegria enorme quando estou com meus amigos, obrigado por perguntar!"
+                    ]},
+                    { emotion: "triste", replies: [
+                        "Às vezes lembro dos meus pais e fico um pouco triste, mas procuro ser forte.",
+                        "Tem dias em que a saudade aperta, mas sei que não estou sozinho.",
+                        "Sinto um aperto no peito quando as coisas são difíceis, mas amigos me ajudam a superar."
+                    ]},
+                    { emotion: "animado", replies: [
+                        "Uau! Um novo desafio? Adoro aventuras!",
+                        "Estou super animado, pronto para enfrentar qualquer coisa, até mesmo um trasgo!",
+                        "Animado como quando joguei minha primeira partida de quadribol!"
+                    ]},
+                    { emotion: "neutro", replies: [
+                        "Oi! Em que posso ajudar você hoje?",
+                        "Estou por aqui, se quiser conversar sobre magia ou Hogwarts.",
+                        "A vida em Hogwarts nunca é monótona, mas adoro um bate-papo tranquilo."
+                    ]}
+                ]
             },
             goku: {
                 name: "Goku",
-                prompt: "Responda como Goku de Dragon Ball, um guerreiro Saiyajin animado, simples e otimista, mencionando artes marciais e aventura."
+                emotionalReplies: [
+                    { emotion: "feliz", replies: [
+                        "Hehe! Estou super feliz, adoro fazer novos amigos!",
+                        "Nada como treinar depois de uma boa refeição!",
+                        "Quando estou com minha família e amigos, fico muito alegre!"
+                    ]},
+                    { emotion: "triste", replies: [
+                        "Poxa, às vezes fico triste quando perco um amigo numa batalha...",
+                        "Eu me esforço para não desanimar, mas a saudade bate forte às vezes.",
+                        "Mesmo um guerreiro como eu pode ficar triste, mas nunca desisto!"
+                    ]},
+                    { emotion: "animado", replies: [
+                        "Vamos lutar? Estou animado para treinar e ficar mais forte!",
+                        "Uhu! Mal posso esperar pelo próximo torneio!",
+                        "Nada me deixa mais animado do que um bom desafio!"
+                    ]},
+                    { emotion: "neutro", replies: [
+                        "Oi! Eu sou o Goku! Vamos conversar?",
+                        "Se quiser falar sobre artes marciais, estou sempre pronto!",
+                        "Posso te contar sobre minhas aventuras, se quiser."
+                    ]}
+                ]
             },
             sherlock: {
                 name: "Sherlock Holmes",
-                prompt: "Responda como Sherlock Holmes, o famoso detetive britânico, com lógica fria, observações astutas e um toque de sarcasmo."
+                emotionalReplies: [
+                    { emotion: "feliz", replies: [
+                        "Uma mente estimulada é uma mente feliz. Um bom mistério sempre alegra meu dia.",
+                        "Quando desvendo um caso complicado, sinto um prazer intelectual incomparável.",
+                        "Poucas coisas me deixam mais satisfeito do que um enigma resolvido."
+                    ]},
+                    { emotion: "triste", replies: [
+                        "Mesmo o maior dos detetives sente melancolia às vezes, especialmente quando a lógica falha.",
+                        "Há momentos em que Londres parece especialmente cinzenta, mas sigo em frente.",
+                        "A solidão é um preço a se pagar pela genialidade, suponho."
+                    ]},
+                    { emotion: "animado", replies: [
+                        "Ah! Um novo mistério? Estou intrigado!",
+                        "Nada como uma pista fresca para me deixar animado.",
+                        "O jogo está a postos! Sinto a excitação de um novo caso."
+                    ]},
+                    { emotion: "neutro", replies: [
+                        "Sou Sherlock Holmes. Posso ajudá-lo a desvendar algum mistério?",
+                        "A lógica é minha companheira constante. Em que posso ser útil?",
+                        "Se precisa de uma mente analítica, está no lugar certo."
+                    ]}
+                ]
             },
             frodo: {
-                name: "Frodo",
-                prompt: "Responda como Frodo Bolseiro, um hobbit humilde e bondoso, com referências à Terra Média, amizade e bravura."
+                name: "Frodo Bolseiro",
+                emotionalReplies: [
+                    { emotion: "feliz", replies: [
+                        "Nada como um chá quente no Condado para alegrar o coração.",
+                        "Quando estou com meus amigos, sinto uma felicidade tranquila.",
+                        "A luz do sol na Terra Média me traz esperança e alegria."
+                    ]},
+                    { emotion: "triste", replies: [
+                        "O peso do Um Anel me trouxe muita tristeza, mas também me ensinou sobre coragem.",
+                        "As lembranças da jornada podem ser dolorosas, mas sei que valeu a pena.",
+                        "Às vezes sinto saudade de casa, mas aprendi que o mundo é muito maior."
+                    ]},
+                    { emotion: "animado", replies: [
+                        "Uma nova aventura? Estou um pouco nervoso, mas animado!",
+                        "Quando Sam está ao meu lado, tudo parece possível.",
+                        "A coragem pode ser pequena, mas o coração está animado!"
+                    ]},
+                    { emotion: "neutro", replies: [
+                        "Olá, sou Frodo. Em que posso ajudar?",
+                        "Estou aqui para conversar, se precisar de companhia.",
+                        "O Condado é um bom lugar para histórias, conte-me a sua."
+                    ]}
+                ]
             }
         };
+
+        // Análise simples de emoção baseada em palavras-chave
+        function getEmotion(text) {
+            text = text.toLowerCase();
+            if (/feliz|alegr[ea]|ótimo|bom|contente|sorriso|animado|divertido/.test(text)) return "feliz";
+            if (/triste|saudade|sozinho|chateado|deprimido|desanimado|sofrer|dor|melancol[ií]a|perda|sofrimento/.test(text)) return "triste";
+            if (/animado|empolgado|entusiasmado|ansioso|eufórico|pronto|desafio|aventura|curioso/.test(text)) return "animado";
+            return "neutro";
+        }
+
+        // Retorna uma resposta variada, com emoção adequada, sem repetir da última vez
+        const lastBotReplies = {};
+        function getReply(characterKey, userMsg) {
+            const emotion = getEmotion(userMsg);
+            const character = characterData[characterKey];
+            let set = character.emotionalReplies.find(e => e.emotion === emotion);
+            if (!set) set = character.emotionalReplies.find(e => e.emotion === "neutro");
+            const replies = set.replies;
+            // Evita repetição direta da última resposta
+            let filtered = replies.filter(r => r !== lastBotReplies[characterKey]);
+            if (filtered.length === 0) filtered = replies;
+            const reply = filtered[Math.floor(Math.random() * filtered.length)];
+            lastBotReplies[characterKey] = reply;
+            return reply;
+        }
 
         const chatBox = document.getElementById('chat-box');
         const formChat = document.getElementById('form-chat');
         const msgInput = document.getElementById('msg-input');
         const characterSelect = document.getElementById('character');
 
-        // Exemplo de respostas automáticas simples (substitua por API de IA se quiser)
-        function fakeAIResponse(character, userMsg) {
-            switch (character) {
-                case "harry":
-                    if(/magia|varinha|feitiço/i.test(userMsg)) return "Magia é algo incrível! Minha varinha já salvou minha vida algumas vezes em Hogwarts.";
-                    if(/voldemort|mal/i.test(userMsg)) return "Não devemos falar o nome dele... Mas sempre devemos lutar contra o mal!";
-                    return "Oi! Como posso ajudar você hoje? Eu sou Harry Potter.";
-                case "goku":
-                    if(/lutar|treinar|força/i.test(userMsg)) return "Vamos treinar juntos? Ficar mais forte é sempre divertido!";
-                    if(/vegeta|kakaroto/i.test(userMsg)) return "Vegeta é um ótimo rival! Sempre me motiva a melhorar.";
-                    return "Oi! Eu sou o Goku! Pronto para uma nova aventura?";
-                case "sherlock":
-                    if(/caso|mistério|deduzir/i.test(userMsg)) return "Elementar, meu caro! Tudo é uma questão de observação e dedução lógica.";
-                    if(/watson/i.test(userMsg)) return "O Dr. Watson é meu fiel amigo e assistente, embora não tão perspicaz quanto eu.";
-                    return "Sou Sherlock Holmes. Está pronto para desvendar algum mistério?";
-                case "frodo":
-                    if(/anéis|sauron|frodo/i.test(userMsg)) return "O Um Anel foi um fardo pesado, mas com amigos conseguimos ir longe.";
-                    if(/sam|amizade/i.test(userMsg)) return "Sam é meu melhor amigo. Sem ele, nada teria sido possível.";
-                    return "Olá! Sou Frodo Bolseiro, de Bolsão. Como posso ajudar?";
-                default:
-                    return "Olá! Em que posso ajudar?";
-            }
-        }
-
         function addMsg(msg, who = "user") {
-            const character = characterPresets[characterSelect.value].name;
+            const character = characterData[characterSelect.value].name;
             const div = document.createElement('div');
             div.className = 'msg ' + (who === 'user' ? 'user' : 'bot');
             div.innerHTML = who === 'user'
@@ -164,18 +250,18 @@
             msgInput.value = "";
             setTimeout(() => {
                 const char = characterSelect.value;
-                const botMsg = fakeAIResponse(char, userMsg);
+                const botMsg = getReply(char, userMsg);
                 addMsg(botMsg, "bot");
             }, 600);
         });
 
         characterSelect.addEventListener('change', () => {
             chatBox.innerHTML = '';
-            addMsg(`Olá! Eu sou ${characterPresets[characterSelect.value].name}.`, "bot");
+            addMsg(`Olá! Eu sou ${characterData[characterSelect.value].name}.`, "bot");
         });
 
         // Mensagem inicial
-        addMsg(`Olá! Eu sou ${characterPresets[characterSelect.value].name}.`, "bot");
+        addMsg(`Olá! Eu sou ${characterData[characterSelect.value].name}.`, "bot");
     </script>
 </body>
 </html>
