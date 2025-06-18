@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Blue Lock 2D - Skills e Zagueiros</title>
+  <title>Blue Lock 2D - Skills, Zagueiros e IA Melhorada</title>
   <style>
     body {
       margin: 0;
@@ -112,7 +112,7 @@
   </style>
 </head>
 <body>
-  <h1>Blue Lock 2D - Skills e Zagueiros</h1>
+  <h1>Blue Lock 2D - Skills, Zagueiros e IA Melhorada</h1>
   <div id="container">
     <div id="scoreboard"></div>
     <div id="instructions">
@@ -176,26 +176,21 @@
         y: 28,
         r: 18,
         speed: 2.5,
-        dir: Math.random() > 0.5 ? 1 : -1
+        dir: 1,  // direção inicial, IA melhorada ajusta isso
+        reaction: 0.23 + Math.random()*0.16 // aleatório, para não ficar impossível
       };
       defenders = [
         {
           x: field.goal.x + 30,
           y: 110,
           r: 16,
-          speed: 1.9 + Math.random(),
-          dir: 1,
-          minX: field.goal.x - 40,
-          maxX: field.goal.x + field.goal.w/2-10,
+          speed: 2.2 + Math.random()*0.5,
         },
         {
           x: field.goal.x + field.goal.w - 30,
           y: 160,
           r: 16,
-          speed: 2.0 + Math.random(),
-          dir: -1,
-          minX: field.goal.x + field.goal.w/2+10,
-          maxX: field.goal.x + field.goal.w + 40,
+          speed: 2.2 + Math.random()*0.5,
         }
       ];
       dribbleWindow = false;
@@ -296,28 +291,59 @@
       ctx.lineWidth = 1;
     }
 
+    // IA do goleiro melhorada: segue a bola só se ela estiver vindo, reage ao chute, e "salta" para interceptar a bola
     function updateGoalie() {
-      goalie.x += goalie.dir * goalie.speed;
-      if (goalie.x - goalie.r < field.goal.x) {
-        goalie.x = field.goal.x + goalie.r;
-        goalie.dir *= -1;
-      }
-      if (goalie.x + goalie.r > field.goal.x + field.goal.w) {
-        goalie.x = field.goal.x + field.goal.w - goalie.r;
-        goalie.dir *= -1;
+      // Quando a bola está chutada, o goleiro tenta ir para a trajetória do chute com leve atraso/reação
+      if (ball.moving) {
+        // O goleiro tenta prever onde a bola cruzará a linha do gol
+        // Calcula a posição X onde a bola cruzará y = field.goal.y + field.goal.h
+        let t = (field.goal.y + field.goal.h - ball.y) / ball.vy;
+        let interceptX = ball.x + ball.vx * t;
+        // Se a bola está indo para baixo ou já passou do gol, fica parado
+        if (t < 0 || isNaN(t) || !isFinite(t)) {
+          // nada
+        } else {
+          // Move em direção ao interceptX, com velocidade e reação
+          let diff = interceptX - goalie.x;
+          goalie.x += diff * goalie.reaction;
+          // Limites do gol
+          if (goalie.x - goalie.r < field.goal.x) goalie.x = field.goal.x + goalie.r;
+          if (goalie.x + goalie.r > field.goal.x + field.goal.w) goalie.x = field.goal.x + field.goal.w - goalie.r;
+        }
+      } else {
+        // Antes do chute, o goleiro tenta acompanhar horizontalmente o jogador, mas com atraso
+        let diff = player.x - goalie.x;
+        goalie.x += diff * 0.07;
+        // Limites do gol
+        if (goalie.x - goalie.r < field.goal.x) goalie.x = field.goal.x + goalie.r;
+        if (goalie.x + goalie.r > field.goal.x + field.goal.w) goalie.x = field.goal.x + field.goal.w - goalie.r;
       }
     }
 
+    // Zagueiros agora perseguem o jogador
     function updateDefenders() {
       defenders.forEach(def => {
-        def.x += def.dir * def.speed;
-        if (def.x - def.r < def.minX) {
-          def.x = def.minX + def.r;
-          def.dir *= -1;
-        }
-        if (def.x + def.r > def.maxX) {
-          def.x = def.maxX - def.r;
-          def.dir *= -1;
+        // Só perseguem se o jogador não chutou ainda
+        if (!ball.moving && !dribbleWindow) {
+          // Move na direção do jogador com uma pequena aleatoriedade
+          let dx = player.x - def.x;
+          let dy = player.y - def.y;
+          let dist = Math.sqrt(dx*dx + dy*dy);
+          // Para não tremular quando muito próximo, só move se estiver longe
+          if (dist > 1) {
+            let normX = dx / dist;
+            let normY = dy / dist;
+            // Pequena aleatoriedade para não ficarem iguais
+            let rand = (Math.random()-0.5)*0.3;
+            def.x += (normX + rand) * def.speed;
+            def.y += (normY + rand) * def.speed;
+          }
+          // Limites verticais para os zagueiros (ficam entre área e meio campo)
+          if (def.y < 85) def.y = 85;
+          if (def.y > field.height-60) def.y = field.height-60;
+          // Limites horizontais do campo
+          if (def.x - def.r < 10) def.x = 10 + def.r;
+          if (def.x + def.r > field.width-10) def.x = field.width-10 - def.r;
         }
       });
     }
