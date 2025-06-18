@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Chat com OpenAI GPT</title>
+  <title>Chat com Copilot (Backend Genérico)</title>
   <style>
     body { font-family: Arial, sans-serif; background: #222; color: #f2f2f2; }
     #chatbox { width: 90%; max-width: 600px; margin: 40px auto; padding: 20px; background: #333; border-radius: 8px; }
@@ -16,7 +16,7 @@
 </head>
 <body>
   <div id="chatbox">
-    <h2>Copilot Chat (OpenAI)</h2>
+    <h2>Copilot Chat (Backend Genérico)</h2>
     <div id="messages"></div>
     <div id="inputRow">
       <input type="text" id="userInput" placeholder="Digite sua pergunta..." autocomplete="off" />
@@ -24,9 +24,7 @@
     </div>
   </div>
   <script>
-    const OPENAI_API_KEY = "SUA_OPENAI_API_KEY_AQUI"; // <-- Coloque sua chave aqui!
-    const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-    const MODEL = "gpt-3.5-turbo"; // Ou "gpt-4" se preferir e tiver acesso
+    const BACKEND_URL = "http://localhost:5000/pergunte"; // Altere conforme o endpoint do seu Copilot
 
     const messagesDiv = document.getElementById('messages');
     const userInput = document.getElementById('userInput');
@@ -40,46 +38,32 @@
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    async function askOpenAI(question) {
+    async function askCopilot(question) {
       addMessage(question, 'user');
       addMessage('Pensando...', 'bot');
-
       try {
-        const res = await fetch(OPENAI_URL, {
+        const res = await fetch(BACKEND_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: MODEL,
-            messages: [{ role: "user", content: question }],
-            max_tokens: 800,
-            temperature: 0.7
-          })
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pergunta: question }) // Altere o formato conforme seu backend
         });
-
         const data = await res.json();
         document.querySelectorAll('.bot').forEach(el => {
           if (el.innerText === 'Pensando...') el.remove();
         });
-        if (data.choices && data.choices.length > 0) {
-          addMessage(data.choices[0].message.content, 'bot');
-        } else {
-          addMessage('Erro ao responder. Verifique sua chave de API ou tente novamente.', 'bot');
-        }
+        addMessage(data.resposta || JSON.stringify(data), 'bot');
       } catch (e) {
         document.querySelectorAll('.bot').forEach(el => {
           if (el.innerText === 'Pensando...') el.remove();
         });
-        addMessage('Erro de conexão com a API.', 'bot');
+        addMessage('Erro ao conectar ao backend Copilot.', 'bot');
       }
     }
 
     sendBtn.onclick = () => {
       const q = userInput.value.trim();
       if (q) {
-        askOpenAI(q);
+        askCopilot(q);
         userInput.value = '';
       }
     };
