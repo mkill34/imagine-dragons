@@ -2,21 +2,21 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Gojo vs Sukuna - Jujutsu Kaisen</title>
+    <title>Gojo vs Sukuna - Jujutsu Kaisen (Mangá)</title>
     <style>
         body {
-            background: linear-gradient(135deg, #1b1423 0%, #4f2958 100%);
+            background: linear-gradient(135deg, #1a1320 0%, #7e264e 100%);
             color: #fff;
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
             min-height: 100vh;
         }
         .container {
-            max-width: 520px;
+            max-width: 540px;
             margin: 40px auto;
-            background: rgba(30,24,40, 0.98);
+            background: rgba(25,20,32, 0.98);
             border-radius: 14px;
-            padding: 30px 32px 38px 32px;
+            padding: 32px 36px 40px 36px;
             box-shadow: 0 12px 36px rgba(0,0,0,0.3);
         }
         h1 {
@@ -25,14 +25,14 @@
             letter-spacing: 1px;
         }
         #scene {
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             font-size: 1.13em;
             min-height: 100px;
         }
         .choices {
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 15px;
         }
         button {
             background: #b76cff;
@@ -53,6 +53,15 @@
             font-size: 0.98em;
             color: #ffccf7;
         }
+        .death {
+            color: #ff3867;
+            font-weight: bold;
+        }
+        .manga {
+            font-size: 0.98em;
+            color: #b3e5fc;
+            margin-bottom: 1em;
+        }
         @media (max-width: 650px) {
             .container { padding: 16px 5vw 24px 5vw; }
         }
@@ -60,7 +69,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>Gojo vs Sukuna</h1>
+        <h1>Gojo vs Sukuna<br><span style="font-size:0.7em;font-weight:400;">(Baseado no mangá)</span></h1>
+        <div class="manga">
+            <b>Atenção:</b> Este jogo contém spoilers do mangá de Jujutsu Kaisen!
+        </div>
         <div class="status" id="status"></div>
         <div id="scene"></div>
         <div class="choices"></div>
@@ -69,111 +81,127 @@
         // Estado dos personagens
         let state = {
             gojoHP: 100,
-            sukunaHP: 100
+            sukunaHP: 100,
+            hollowPurpleUsado: false,
+            mahorgaInvocado: false,
+            gojoMorto: false,
         };
 
         // Cenas do jogo
         const scenes = {
             inicio: {
-                texto: "No campo de batalha, Gojo Satoru encara Ryomen Sukuna. O ar treme com a energia amaldiçoada! Quem será o vencedor?",
+                texto: "Shinjuku vira palco da maior luta de feiticeiros. Gojo Satoru, o mais forte, enfrenta Ryomen Sukuna, o Rei das Maldições.<br>Ambos ativam seus domínios simultaneamente!",
                 escolhas: [
-                    { texto: "Começar a batalha!", prox: "gojoInicia" }
-                ]
-            },
-            gojoInicia: {
-                texto: "Gojo toma a dianteira! Qual técnica usar?",
-                escolhas: [
-                    { texto: "Usar Limitless - Azul", prox: "gojoAzul" },
-                    { texto: "Ativar o Infinito", prox: "gojoInfinito" }
-                ]
-            },
-            gojoAzul: {
-                texto: "Gojo dispara 'Azul', criando uma distorção que suga tudo ao redor!",
-                efeito: () => {
-                    state.sukunaHP -= 30;
-                },
-                escolhas: [
-                    { texto: "Sukuna contra-ataca!", prox: "sukunaContra1" }
+                    { texto: "Gojo inicia com Infinito!", prox: "gojoInfinito" },
+                    { texto: "Sukuna inicia com Santuário Malevolente!", prox: "sukunaDominio" }
                 ]
             },
             gojoInfinito: {
-                texto: "Gojo ativa o Infinito, tornando-se intocável por ataques físicos! Sukuna analisa a situação.",
-                efeito: () => {
-                    // Defesa, Sukuna erra o ataque
-                },
+                texto: "Gojo ativa o Infinito, bloqueando ataques diretos de Sukuna. O público observa em tensão.",
                 escolhas: [
-                    { texto: "Sukuna tenta atacar!", prox: "sukunaErra" }
+                    { texto: "Atacar com Azul", prox: "gojoAzul" },
+                    { texto: "Ativar Expansão de Domínio", prox: "gojoDominio" }
                 ]
             },
-            sukunaContra1: {
-                texto: "Sukuna ri e lança 'Corte Dismantle'!",
+            sukunaDominio: {
+                texto: "Sukuna expande o Santuário Malevolente! O domínio corta tudo ao redor, tornando impossível escapar.",
                 efeito: () => {
+                    state.gojoHP -= 25;
+                },
+                escolhas: [
+                    { texto: "Gojo resiste e contra-ataca!", prox: "gojoAzul" }
+                ]
+            },
+            gojoAzul: {
+                texto: "Gojo dispara 'Azul', tentando distorcer Sukuna. Mas Sukuna sorri, já tendo analisado a técnica.",
+                efeito: () => {
+                    state.sukunaHP -= 20;
+                },
+                escolhas: [
+                    { texto: "Sukuna invoca Mahoraga!", prox: "sukunaMahoraga" },
+                    { texto: "Gojo tenta Hollow Purple", prox: "gojoHollowPurple" }
+                ]
+            },
+            gojoDominio: {
+                texto: "Gojo expande o 'Muryoku Kukan' (Unlimited Void)! Sukuna sente a mente sobrecarregada, mas rapidamente adapta seu domínio.",
+                efeito: () => {
+                    state.sukunaHP -= 25;
+                    state.gojoHP -= 15; // Ambos sofrem danos devido ao choque de domínios
+                },
+                escolhas: [
+                    { texto: "Sukuna invoca Mahoraga!", prox: "sukunaMahoraga" },
+                    { texto: "Lutar até o fim!", prox: "climax" }
+                ]
+            },
+            gojoHollowPurple: {
+                texto: "Gojo lança Hollow Purple! Uma esfera destrutiva atravessa o campo de batalha.",
+                efeito: () => {
+                    state.sukunaHP -= 35;
+                    state.hollowPurpleUsado = true;
+                },
+                escolhas: [
+                    { texto: "Sukuna invoca Mahoraga!", prox: "sukunaMahoraga" },
+                    { texto: "Gojo pressiona!", prox: "climax" }
+                ]
+            },
+            sukunaMahoraga: {
+                texto: "Sukuna invoca Mahoraga, o Shikigami que se adapta a qualquer técnica! Gojo sente o perigo iminente.",
+                efeito: () => {
+                    state.mahorgaInvocado = true;
                     state.gojoHP -= 20;
                 },
                 escolhas: [
-                    { texto: "Gojo prepara o próximo ataque!", prox: "gojoSegundoTurno" }
+                    { texto: "Gojo tenta novo Hollow Purple", prox: "gojoHollowPurpleMahoraga" },
+                    { texto: "Gojo tenta proteger civis", prox: "gojoProteger" }
                 ]
             },
-            sukunaErra: {
-                texto: "O ataque de Sukuna para no Infinito de Gojo — ele não consegue atingi-lo!",
-                escolhas: [
-                    { texto: "Gojo ataca agora!", prox: "gojoSegundoTurno" }
-                ]
-            },
-            gojoSegundoTurno: {
-                texto: "Gojo sorri confiante. Qual técnica agora?",
-                escolhas: [
-                    { texto: "Usar Hollow Purple", prox: "hollowPurple" },
-                    { texto: "Ativar Expansão de Domínio", prox: "dominioGojo" }
-                ]
-            },
-            hollowPurple: {
-                texto: "Gojo reúne Azul e Vermelho e lança Hollow Purple! Uma esfera destrutiva avança sobre Sukuna!",
+            gojoHollowPurpleMahoraga: {
+                texto: "Gojo dispara Hollow Purple novamente, mas Mahoraga adapta-se e Sukuna utiliza a brecha para atacar.",
                 efeito: () => {
-                    state.sukunaHP -= 50;
+                    state.gojoHP -= 50;
                 },
                 escolhas: [
-                    { texto: "Sukuna resiste e prepara seu domínio!", prox: "dominioSukuna" }
+                    { texto: "O que acontece?", prox: "gojoMorte" }
                 ]
             },
-            dominioGojo: {
-                texto: "Gojo ativa 'Ilimitado Vazio'! O tempo e espaço se distorcem na mente de Sukuna.",
+            gojoProteger: {
+                texto: "Ao tentar proteger civis, Gojo se expõe. Sukuna aproveita e atinge Gojo com um corte multidimensional.",
                 efeito: () => {
-                    state.sukunaHP -= 40;
+                    state.gojoHP -= 60;
                 },
                 escolhas: [
-                    { texto: "Sukuna luta para se libertar!", prox: "dominioSukuna" }
+                    { texto: "O que acontece?", prox: "gojoMorte" }
                 ]
             },
-            dominioSukuna: {
-                texto: "Sukuna ativa 'Santuário Malevolente'! O espaço é distorcido e Gojo é atingido por cortes múltiplos!",
+            climax: {
+                texto: "A batalha atinge o ápice. Gojo e Sukuna estão exaustos, mas Sukuna usa a adaptação de Mahoraga para lançar o golpe decisivo.",
                 efeito: () => {
-                    state.gojoHP -= 35;
+                    state.gojoHP -= 80;
                 },
                 escolhas: [
-                    { texto: "Final da batalha!", prox: "final" }
+                    { texto: "Desfecho...", prox: "gojoMorte" }
                 ]
             },
-            final: {
+            gojoMorte: {
                 texto: () => {
-                    let resultado = '';
-                    if (state.gojoHP > state.sukunaHP) {
-                        resultado = "Com um sorriso, Gojo permanece de pé, enquanto Sukuna cai de joelhos. Gojo vence a batalha!";
-                    } else if (state.gojoHP < state.sukunaHP) {
-                        resultado = "Sukuna ri triunfante enquanto Gojo cai, esgotado. Sukuna vence!";
+                    state.gojoMorto = true;
+                    if(state.gojoHP <= 0) {
+                        return "<span class='death'>Gojo é partido ao meio por Sukuna usando a técnica adaptada de Mahoraga. O mais forte caiu.<br><br>Sukuna ergue-se como vencedor, mas o mundo da feitiçaria nunca mais será o mesmo.</span><br><br><b>Fim do jogo (baseado no mangá)</b><br><br>Deseja tentar outro caminho?";
                     } else {
-                        resultado = "Ambos estão exaustos, mas nenhum cai. É um empate lendário!";
+                        return "Gojo resiste, mas está gravemente ferido. Sukuna se aproxima para o golpe final...";
                     }
-                    return resultado + "<br><br>Deseja jogar novamente?";
                 },
                 escolhas: [
-                    { texto: "Reiniciar", prox: "reset" }
+                    { texto: "Jogar novamente", prox: "reset" }
                 ]
             },
             reset: {
                 efeito: () => {
                     state.gojoHP = 100;
                     state.sukunaHP = 100;
+                    state.hollowPurpleUsado = false;
+                    state.mahorgaInvocado = false;
+                    state.gojoMorto = false;
                 },
                 escolhas: [
                     { texto: "Começar!", prox: "inicio" }
@@ -183,11 +211,13 @@
 
         function mostrarCena(cenaKey) {
             const cena = scenes[cenaKey];
-            // Aplica efeitos de dano ou cura se houver
+            // Aplica efeitos se houver
             if (cena.efeito) cena.efeito();
 
             // Atualiza status
-            document.getElementById('status').innerHTML = `Gojo HP: <b>${state.gojoHP}</b> | Sukuna HP: <b>${state.sukunaHP}</b>`;
+            let st = `Gojo HP: <b>${state.gojoHP}</b> | Sukuna HP: <b>${state.sukunaHP}</b>`;
+            if(state.gojoMorto) st += " <span class='death'>Gojo está morto!</span>";
+            document.getElementById('status').innerHTML = st;
 
             // Mostra texto da cena
             const texto = typeof cena.texto === "function" ? cena.texto() : cena.texto;
