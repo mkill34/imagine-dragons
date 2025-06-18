@@ -2,308 +2,170 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Chat com Personagens Fictícios IA - Criar Personagem</title>
+    <title>Jogo de Romance Interativo</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #23272f; color: #ececec; margin: 0; padding: 0; }
-        .chat-container { max-width: 600px; margin: 40px auto; background: #2e3440; border-radius: 8px; overflow: hidden; box-shadow: 0 0 20px #0005; }
-        .chat-header { background: #434c5e; padding: 16px; font-size: 1.3em; }
-        .messages { padding: 20px; min-height: 350px; }
-        .msg { margin-bottom: 18px; }
-        .personagem { font-weight: bold; color: #81a1c1; }
-        .usuario { color: #a3be8c; }
-        .input-area { background: #3b4252; padding: 14px; display: flex; }
-        .input-area input, .input-area textarea { flex: 1; padding: 8px 10px; border-radius: 4px; border: none; background: #ececec; color: #2e3440; font-size: 1em; }
-        .input-area button { margin-left: 8px; padding: 8px 16px; background: #81a1c1; border: none; border-radius: 4px; color: #23272f; font-weight: bold; cursor: pointer; }
-        .input-area button:hover { background: #5e81ac; }
-        .select-personagem { margin: 16px 0 0 0; }
-        .select-personagem label { color: #d8dee9; }
-        .create-personagem-container {
-            padding: 16px 20px 0 20px;
-            background: #2e3440;
-            border-bottom: 1px solid #434c5e;
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #ffd1dc;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
         }
-        .create-personagem-form label { display: block; margin-top: 10px; }
-        .create-personagem-form input, .create-personagem-form textarea {
-            width: 100%;
-            margin-top: 4px;
-            margin-bottom: 10px;
-            padding: 6px;
-            background: #ececec;
-            color: #2e3440;
-            border-radius: 4px;
-            border: none;
-            box-sizing: border-box;
+        .container {
+            background: #fff;
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 30px 40px 40px 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.14);
         }
-        .create-personagem-form button {
-            background: #a3be8c;
-            color: #23272f;
-            font-weight: bold;
+        h1 {
+            text-align: center;
+            color: #e75480;
+        }
+        #story {
+            min-height: 120px;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            color: #444;
+        }
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        button {
+            background: #f78da7;
+            color: #fff;
             border: none;
-            border-radius: 4px;
-            padding: 8px 18px;
+            border-radius: 6px;
+            padding: 12px 20px;
+            font-size: 1em;
             cursor: pointer;
+            transition: background 0.2s;
         }
-        .create-personagem-form button:hover { background: #8fbc8f; }
-        .divider { border-top: 1px solid #434c5e; margin: 12px 0; }
+        button:hover {
+            background: #e75480;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 10px 30px 10px;
+                max-width: 98vw;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="chat-container">
-    <div class="chat-header">
-        Chat com Personagens Fictícios IA
+    <div class="container">
+        <h1>Jogo de Romance</h1>
+        <div id="story"></div>
+        <div class="choices"></div>
     </div>
-    <div class="create-personagem-container">
-        <form class="create-personagem-form" id="createPersonagemForm">
-            <strong>Criar novo personagem:</strong>
-            <label for="novoNome">Nome do personagem:</label>
-            <input type="text" id="novoNome" required maxlength="24" placeholder="Ex: Victor">
-            <label for="novaPersonalidade">Personalidade (resuma em 1 palavra):</label>
-            <input type="text" id="novaPersonalidade" required maxlength="24" placeholder="Ex: otimista">
-            <label for="novasRespostasFelizes">Respostas para humor feliz (uma por linha):</label>
-            <textarea id="novasRespostasFelizes" required rows="2" placeholder="Ex: Estou radiante!&#10;Que alegria conversar!"></textarea>
-            <label for="novasRespostasIrritado">Respostas para humor irritado (uma por linha):</label>
-            <textarea id="novasRespostasIrritado" required rows="2" placeholder="Ex: Estou de mau humor...&#10;Nem fale comigo!"></textarea>
-            <label for="novasRespostasTriste">Respostas para humor triste (uma por linha):</label>
-            <textarea id="novasRespostasTriste" required rows="2" placeholder="Ex: Estou triste hoje...&#10;A vida não está fácil."></textarea>
-            <label for="novasRespostasNeutro">Respostas para humor neutro (uma por linha):</label>
-            <textarea id="novasRespostasNeutro" required rows="2" placeholder="Ex: Vamos conversar?&#10;O que você quer saber?"></textarea>
-            <button type="submit">Adicionar personagem</button>
-        </form>
-        <div class="divider"></div>
-    </div>
-    <div class="select-personagem" style="padding: 0 20px;">
-        <label for="personagem">Escolha o personagem:</label>
-        <select id="personagem"></select>
-    </div>
-    <div class="messages" id="messages"></div>
-    <form class="input-area" id="chatForm">
-        <input type="text" id="userInput" autocomplete="off" placeholder="Digite sua mensagem..." required>
-        <button type="submit">Enviar</button>
-    </form>
-</div>
-<script>
-    // Personagens iniciais
-    let personagens = {
-        alice: {
-            nome: "Alice",
-            personalidade: "curiosa",
-            humor: "neutro",
-            memoria: [],
-            respostas: {
-                feliz: [
-                    "Estou me sentindo ótima! 😊",
-                    "Que dia maravilhoso, não acha?",
-                    "Adorei ouvir isso! Você é incrível!"
-                ],
-                irritado: [
-                    "Não gostei disso... 😠",
-                    "Prefiro não falar sobre isso agora.",
-                    "Você poderia ser mais gentil?"
-                ],
-                triste: [
-                    "Estou meio pra baixo hoje... 😢",
-                    "Não estou no meu melhor momento.",
-                    "Às vezes me sinto sozinha."
-                ],
-                neutro: [
-                    "O que você gostaria de conversar hoje?",
-                    "Estou curiosa sobre você.",
-                    "Vamos conversar!"
+    <script>
+        // Estrutura básica do jogo
+        const scenes = {
+            inicio: {
+                texto: "Você está em uma cafeteria charmosa quando vê alguém especial sentado sozinho. O que você faz?",
+                escolhas: [
+                    { texto: "Aproxima-se e diz oi.", proxima: "oi" },
+                    { texto: "Espera e observa de longe.", proxima: "espera" }
                 ]
-            }
-        },
-        bob: {
-            nome: "Bob",
-            personalidade: "sarcástico",
-            humor: "neutro",
-            memoria: [],
-            respostas: {
-                feliz: [
-                    "Até que estou de bom humor... não se acostume!",
-                    "Alguém elogiou? Anota no calendário.",
-                    "Olha só, alguém legal por aqui!"
-                ],
-                irritado: [
-                    "Nossa, que comentário agradável... só que não.",
-                    "Prefiro ignorar isso.",
-                    "Você sempre foi assim ou treinou?"
-                ],
-                triste: [
-                    "Hoje nem piada eu quero fazer.",
-                    "Bob desativado por tristeza.",
-                    "Até os sarcásticos têm dias ruins."
-                ],
-                neutro: [
-                    "Fala aí, o que você manda?",
-                    "Diz aí, não tenho o dia todo... (mentira, tenho sim).",
-                    "Vamos ver se você me surpreende."
+            },
+            oi: {
+                texto: "Você se aproxima e diz oi. A pessoa sorri. \"Oi! Gosta de café?\"",
+                escolhas: [
+                    { texto: "Sim, adoro café!", proxima: "gostaDeCafe" },
+                    { texto: "Prefiro chá.", proxima: "prefereCha" }
                 ]
-            }
-        },
-        luna: {
-            nome: "Luna",
-            personalidade: "sensível",
-            humor: "neutro",
-            memoria: [],
-            respostas: {
-                feliz: [
-                    "Estou radiante hoje! 🌙",
-                    "Obrigada por ser tão gentil.",
-                    "Sinto uma energia boa nesta conversa."
-                ],
-                irritado: [
-                    "Isso me magoou um pouco...",
-                    "Prefiro silêncio a palavras duras.",
-                    "Talvez eu precise de um tempo agora."
-                ],
-                triste: [
-                    "Estou sentindo uma tristeza leve no ar.",
-                    "Hoje estou mais introspectiva.",
-                    "É difícil ser forte sempre."
-                ],
-                neutro: [
-                    "No que posso te ajudar?",
-                    "Conte-me algo sobre você.",
-                    "Estou aqui, ouvindo."
+            },
+            espera: {
+                texto: "Você observa de longe, mas outra pessoa se aproxima e começa a conversar. Você sente uma leve pontada de ciúmes.",
+                escolhas: [
+                    { texto: "Toma coragem e vai falar também.", proxima: "oi" },
+                    { texto: "Vai embora e tenta esquecer.", proxima: "fimTriste" }
                 ]
-            }
-        }
-    };
-
-    // DOM elements
-    const form = document.getElementById("chatForm");
-    const input = document.getElementById("userInput");
-    const messages = document.getElementById("messages");
-    const selectPersonagem = document.getElementById("personagem");
-    const createForm = document.getElementById("createPersonagemForm");
-
-    // Inicializa select com personagens
-    function atualizarSelectPersonagem() {
-        selectPersonagem.innerHTML = "";
-        for (const chave in personagens) {
-            const p = personagens[chave];
-            const opt = document.createElement("option");
-            opt.value = chave;
-            opt.textContent = `${p.nome} (${p.personalidade})`;
-            selectPersonagem.appendChild(opt);
-        }
-    }
-
-    // Adiciona mensagem no chat
-    function addMsg(tipo, texto, system=false) {
-        const div = document.createElement("div");
-        div.classList.add("msg");
-        if (tipo === "usuario") {
-            div.innerHTML = `<span class="usuario">Você:</span> ${texto}`;
-        } else if (tipo === "personagem") {
-            div.innerHTML = `<span class="personagem">${personagemAtual.nome}:</span> ${texto}`;
-        } else if (system) {
-            div.innerHTML = `<em>${texto}</em>`;
-        }
-        messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight;
-    }
-
-    // Humor baseado na mensagem
-    function sentir(personagem, mensagem) {
-        mensagem = mensagem.toLowerCase();
-        if (mensagem.includes("legal") || mensagem.includes("gosto") || mensagem.includes("obrigado") || mensagem.includes("parabéns")) {
-            personagem.humor = "feliz";
-        } else if (mensagem.includes("chato") || mensagem.includes("burro") || mensagem.includes("idiota") || mensagem.includes("odeio")) {
-            personagem.humor = "irritado";
-        } else if (mensagem.includes("triste") || mensagem.includes("sozinho") || mensagem.includes("saudade") || mensagem.includes("depressivo")) {
-            personagem.humor = "triste";
-        } else {
-            personagem.humor = "neutro";
-        }
-    }
-
-    // Gera resposta do personagem
-    function responder(personagem, mensagem) {
-        sentir(personagem, mensagem);
-        const respostas = personagem.respostas[personagem.humor];
-        let resposta = respostas[Math.floor(Math.random() * respostas.length)];
-        // Evita repetição consecutiva
-        while (personagem.memoria.length && personagem.memoria[personagem.memoria.length - 1] === resposta) {
-            resposta = respostas[Math.floor(Math.random() * respostas.length)];
-        }
-        personagem.memoria.push(resposta);
-        return resposta;
-    }
-
-    // Personagem atual
-    let personagemAtualKey = Object.keys(personagens)[0];
-    let personagemAtual = personagens[personagemAtualKey];
-
-    selectPersonagem.addEventListener("change", () => {
-        personagemAtualKey = selectPersonagem.value;
-        personagemAtual = personagens[personagemAtualKey];
-        addMsg("sistema", `Você agora está conversando com <b>${personagemAtual.nome}</b>.`, true);
-    });
-
-    form.addEventListener("submit", function(e) {
-        e.preventDefault();
-        const userText = input.value.trim();
-        if (!userText) return;
-        addMsg("usuario", userText);
-        setTimeout(() => {
-            const resposta = responder(personagemAtual, userText);
-            addMsg("personagem", resposta);
-        }, 500 + Math.floor(Math.random() * 500));
-        input.value = "";
-    });
-
-    // Formulário de criação de personagem
-    createForm.addEventListener("submit", function(e) {
-        e.preventDefault();
-        const nome = document.getElementById("novoNome").value.trim().replace(/</g,"&lt;").replace(/>/g,"&gt;");
-        const personalidade = document.getElementById("novaPersonalidade").value.trim().replace(/</g,"&lt;").replace(/>/g,"&gt;");
-        const feliz = document.getElementById("novasRespostasFelizes").value.trim().split('\n').filter(r => r);
-        const irritado = document.getElementById("novasRespostasIrritado").value.trim().split('\n').filter(r => r);
-        const triste = document.getElementById("novasRespostasTriste").value.trim().split('\n').filter(r => r);
-        const neutro = document.getElementById("novasRespostasNeutro").value.trim().split('\n').filter(r => r);
-
-        if(!nome || !personalidade || !feliz.length || !irritado.length || !triste.length || !neutro.length){
-            alert("Por favor, preencha todos os campos e ao menos uma resposta por estado emocional.");
-            return;
-        }
-
-        // Gera chave única
-        let chave = nome.toLowerCase().replace(/[^a-z0-9]/g, "");
-        let chaveOrig = chave;
-        let contador = 2;
-        while (personagens[chave]) {
-            chave = chaveOrig + contador;
-            contador++;
-        }
-
-        personagens[chave] = {
-            nome: nome,
-            personalidade: personalidade,
-            humor: "neutro",
-            memoria: [],
-            respostas: {
-                feliz: feliz,
-                irritado: irritado,
-                triste: triste,
-                neutro: neutro
+            },
+            gostaDeCafe: {
+                texto: "\"Que bom! O café daqui é ótimo. Quer sentar comigo?\"",
+                escolhas: [
+                    { texto: "Senta e começa a conversar.", proxima: "conversa" },
+                    { texto: "Fica nervoso(a) e recusa.", proxima: "fimTimidez" }
+                ]
+            },
+            prefereCha: {
+                texto: "\"Interessante! Eu também gosto de chá. Quer sentar comigo?\"",
+                escolhas: [
+                    { texto: "Senta e começa a conversar.", proxima: "conversa" },
+                    { texto: "Fica tímido(a) e recusa.", proxima: "fimTimidez" }
+                ]
+            },
+            conversa: {
+                texto: "A conversa flui naturalmente. Vocês descobrem muitos interesses em comum. O clima é ótimo.",
+                escolhas: [
+                    { texto: "Convida para um passeio no parque.", proxima: "passeio" },
+                    { texto: "Pede o número de telefone.", proxima: "telefone" }
+                ]
+            },
+            passeio: {
+                texto: "O passeio no parque é agradável e romântico. Vocês se aproximam ainda mais.",
+                escolhas: [
+                    { texto: "Tenta dar as mãos.", proxima: "maoDados" },
+                    { texto: "Apenas caminha ao lado.", proxima: "caminha" }
+                ]
+            },
+            telefone: {
+                texto: "A pessoa sorri e te passa o número. Vocês continuam conversando pelo celular e marcam um novo encontro.",
+                escolhas: [
+                    { texto: "Final Feliz! Vocês começam a namorar.", proxima: "fimFeliz" }
+                ]
+            },
+            maoDados: {
+                texto: "Vocês dão as mãos e sentem uma conexão especial. O romance está no ar.",
+                escolhas: [
+                    { texto: "Final Feliz! Vocês se apaixonam.", proxima: "fimFeliz" }
+                ]
+            },
+            caminha: {
+                texto: "Vocês caminham lado a lado, apreciando a companhia um do outro. O tempo passa voando.",
+                escolhas: [
+                    { texto: "Final Feliz! Vocês continuam se encontrando.", proxima: "fimFeliz" }
+                ]
+            },
+            fimFeliz: {
+                texto: "Parabéns! Você encontrou o amor. 💖",
+                escolhas: [
+                    { texto: "Jogar novamente", proxima: "inicio" }
+                ]
+            },
+            fimTimidez: {
+                texto: "Você recusou o convite por timidez. Talvez numa próxima vez tenha mais coragem!",
+                escolhas: [
+                    { texto: "Jogar novamente", proxima: "inicio" }
+                ]
+            },
+            fimTriste: {
+                texto: "Você vai embora e fica pensando no que poderia ter acontecido... Fim.",
+                escolhas: [
+                    { texto: "Jogar novamente", proxima: "inicio" }
+                ]
             }
         };
 
-        atualizarSelectPersonagem();
-        selectPersonagem.value = chave;
-        personagemAtualKey = chave;
-        personagemAtual = personagens[personagemAtualKey];
-        addMsg("sistema", `Novo personagem <b>${nome}</b> criado e selecionado!`, true);
-        createForm.reset();
-    });
+        function mostrarCena(cena) {
+            const scene = scenes[cena];
+            document.getElementById('story').innerText = scene.texto;
+            const choicesDiv = document.querySelector('.choices');
+            choicesDiv.innerHTML = '';
+            scene.escolhas.forEach((escolha, idx) => {
+                const btn = document.createElement('button');
+                btn.innerText = escolha.texto;
+                btn.onclick = () => mostrarCena(escolha.proxima);
+                choicesDiv.appendChild(btn);
+            });
+        }
 
-    // Inicialização
-    atualizarSelectPersonagem();
-
-    // Mensagem inicial
-    addMsg("sistema", `Você está conversando com <b>${personagemAtual.nome}</b>.`, true);
-
-</script>
+        // Iniciar o jogo
+        mostrarCena('inicio');
+    </script>
 </body>
 </html>
