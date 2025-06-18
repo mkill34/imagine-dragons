@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Blue Lock 2D com Skills</title>
+  <title>Blue Lock 2D - Skills e Zagueiros</title>
   <style>
     body {
       margin: 0;
@@ -48,7 +48,7 @@
       display: flex;
       gap: 1rem;
     }
-    .skills button {
+    .skills button, #dribbleBtn {
       padding: 0.5rem 1.5rem;
       font-size: 1rem;
       border: none;
@@ -63,7 +63,7 @@
       background: #ffe600;
       color: #222;
     }
-    .skills button:active {
+    .skills button:active, #dribbleBtn:active {
       background: #1e90ff;
       color: #fff;
     }
@@ -82,20 +82,35 @@
     #restart:hover {
       background: #1e90ff;
     }
+    #dribbleBtn {
+      display: none;
+      margin-bottom: 1rem;
+      background: #ffe600;
+      color: #191970;
+      font-weight: bold;
+      border: 2px solid #153e6b;
+      box-shadow: 0 0 8px #fff70080;
+      animation: dribblePulse 1s infinite alternate;
+    }
+    @keyframes dribblePulse {
+      0% { box-shadow: 0 0 8px #ffe60080; }
+      100% { box-shadow: 0 0 18px #ffe600cc; }
+    }
   </style>
 </head>
 <body>
-  <h1>Blue Lock 2D - Skills</h1>
+  <h1>Blue Lock 2D - Skills e Zagueiros</h1>
   <div id="container">
     <div id="scoreboard"></div>
     <div id="instructions">
-      Movimente-se com as <b>setas</b>. Pressione <b>Espaço</b> para chutar!<br>
-      <b>Ative skills antes de chutar:</b>
+      Mova-se com as <b>setas</b>. Pressione <b>Espaço</b> para chutar!<br>
+      <b>Use skills antes de chutar:</b>
     </div>
     <div class="skills">
       <button id="kaiserBtn">Kaiser Impact ⚡</button>
       <button id="curvoBtn">Chute Curvo 🌀</button>
     </div>
+    <button id="dribbleBtn">Driblar!</button>
     <canvas id="game" width="500" height="320"></canvas>
     <button id="restart">Jogar Novamente</button>
   </div>
@@ -106,6 +121,7 @@
     const restartBtn = document.getElementById('restart');
     const kaiserBtn = document.getElementById('kaiserBtn');
     const curvoBtn = document.getElementById('curvoBtn');
+    const dribbleBtn = document.getElementById('dribbleBtn');
 
     // Campo
     const field = {
@@ -115,10 +131,13 @@
     };
 
     // Estado do jogo
-    let player, ball, goalie;
+    let player, ball, goalie, defenders;
     let score = 0;
     let chances = 3;
-    let gameState = 'playing'; // 'playing', 'goal', 'miss', 'over'
+    let gameState = 'playing'; // 'playing', 'goal', 'miss', 'over', 'dribble'
+    let dribbleWindow = false;
+    let dribbleSuccess = false;
+    let dribbleFailTimeout = null;
 
     // Skills
     let kaiserActive = false;
@@ -133,7 +152,7 @@
         speed: 5,
         vx: 0, vy: 0,
         moving: false,
-        curveT: 0, // para chute curvo
+        curveT: 0,
         curveMaxT: 60,
         curveDir: 0,
         curving: false
@@ -145,6 +164,30 @@
         speed: 2.5,
         dir: Math.random() > 0.5 ? 1 : -1
       };
+      defenders = [
+        {
+          x: field.goal.x + 30,
+          y: 110,
+          r: 16,
+          speed: 1.9 + Math.random(),
+          dir: 1,
+          minX: field.goal.x - 40,
+          maxX: field.goal.x + field.goal.w/2-10,
+        },
+        {
+          x: field.goal.x + field.goal.w - 30,
+          y: 160,
+          r: 16,
+          speed: 2.0 + Math.random(),
+          dir: -1,
+          minX: field.goal.x + field.goal.w/2+10,
+          maxX: field.goal.x + field.goal.w + 40,
+        }
+      ];
+      dribbleWindow = false;
+      dribbleSuccess = false;
+      clearTimeout(dribbleFailTimeout);
+      dribbleBtn.style.display = "none";
     }
 
     function drawField() {
@@ -186,7 +229,7 @@
       ctx.arc(ball.x + 2, ball.y + 2, 2.5, 0, 2 * Math.PI);
       ctx.fillStyle = '#ccc';
       ctx.fill();
-      // efeito visual das skills
+      // Skills visual
       if (kaiserActive && ball.moving) {
         ctx.save();
         ctx.globalAlpha = 0.5;
@@ -222,6 +265,23 @@
       ctx.fill();
     }
 
+    function drawDefenders() {
+      defenders.forEach(def => {
+        ctx.beginPath();
+        ctx.arc(def.x, def.y, def.r, 0, 2 * Math.PI);
+        ctx.fillStyle = '#f7b731';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(def.x, def.y - 8, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#e67e22';
+        ctx.fill();
+      });
+      ctx.lineWidth = 1;
+    }
+
     function updateGoalie() {
       goalie.x += goalie.dir * goalie.speed;
       if (goalie.x - goalie.r < field.goal.x) {
@@ -234,10 +294,24 @@
       }
     }
 
+    function updateDefenders() {
+      defenders.forEach(def => {
+        def.x += def.dir * def.speed;
+        if (def.x - def.r < def.minX) {
+          def.x = def.minX + def.r;
+          def.dir *= -1;
+        }
+        if (def.x + def.r > def.maxX) {
+          def.x = def.maxX - def.r;
+          def.dir *= -1;
+        }
+      });
+    }
+
     // Movimentação
     let keys = {};
     document.addEventListener('keydown', e => {
-      if (gameState === 'playing') {
+      if (gameState === 'playing' && !dribbleWindow) {
         keys[e.key] = true;
         if (e.key === ' ' && !ball.moving) {
           kickBall();
@@ -249,7 +323,7 @@
     });
 
     function updatePlayer() {
-      if (ball.moving) return;
+      if (ball.moving || dribbleWindow) return;
       if (keys['ArrowLeft'] && player.x - player.r > 0) player.x -= player.speed;
       if (keys['ArrowRight'] && player.x + player.r < field.width) player.x += player.speed;
       if (keys['ArrowUp'] && player.y - player.r > 80) player.y -= player.speed;
@@ -259,12 +333,9 @@
     }
 
     function kickBall() {
-      // Definindo skill power
       let speedMult = 1;
       if (kaiserActive) speedMult = 2.3;
       let isCurvo = curvoActive;
-
-      // Direção inicial para o gol, com leve aleatoriedade
       const targetX = field.goal.x + field.goal.w/2 + (Math.random()-0.5)*55;
       const targetY = field.goal.y + field.goal.h + 5;
       const dx = targetX - ball.x;
@@ -273,17 +344,13 @@
       ball.vx = ball.speed * speedMult * dx / dist;
       ball.vy = ball.speed * speedMult * dy / dist;
       ball.moving = true;
-
-      // CURVO: inicia curva
       if (isCurvo) {
         ball.curving = true;
         ball.curveT = 0;
-        // curva para esquerda ou direita, random
         ball.curveDir = Math.random() > 0.5 ? 1 : -1;
       } else {
         ball.curving = false;
       }
-      // skills só afetam o próximo chute
       kaiserActive = false;
       curvoActive = false;
       kaiserBtn.classList.remove('active');
@@ -292,16 +359,13 @@
 
     function updateBall() {
       if (!ball.moving) return;
-      // Curvo: aplica curva na trajetória usando seno para variar vx
       if (ball.curving && ball.curveT < ball.curveMaxT) {
-        // aumenta a curva no começo, diminui no fim
         const curveStrength = 2.1 * ball.curveDir * Math.sin(Math.PI * ball.curveT / ball.curveMaxT);
         ball.vx += curveStrength * 0.05;
         ball.curveT++;
       }
       ball.x += ball.vx;
       ball.y += ball.vy;
-
       // Colisão com goleiro
       const distGoalie = Math.hypot(ball.x - goalie.x, ball.y - goalie.y);
       if (distGoalie < ball.r + goalie.r) {
@@ -330,6 +394,43 @@
       }
     }
 
+    function checkDefenderCollision() {
+      if (ball.moving || dribbleWindow) return;
+      for (let def of defenders) {
+        const dist = Math.hypot(player.x - def.x, player.y - def.y);
+        if (dist < player.r + def.r + 6) {
+          // Drible ativado!
+          dribbleWindow = true;
+          dribbleSuccess = false;
+          dribbleBtn.style.display = "inline-block";
+          gameState = "dribble";
+          // Tempo para reagir
+          dribbleFailTimeout = setTimeout(() => {
+            if (!dribbleSuccess) {
+              dribbleBtn.style.display = "none";
+              gameState = "miss";
+              chances--;
+              showResult('O zagueiro roubou a bola! 😵');
+            }
+          }, 1100);
+          break;
+        }
+      }
+    }
+
+    dribbleBtn.onclick = () => {
+      if (dribbleWindow && !dribbleSuccess) {
+        dribbleSuccess = true;
+        dribbleWindow = false;
+        gameState = "playing";
+        dribbleBtn.style.display = "none";
+        clearTimeout(dribbleFailTimeout);
+        // Efeito visual de drible (rápido avanço)
+        player.y -= 24;
+        if (player.y < 80 + player.r) player.y = 80 + player.r + 2;
+      }
+    };
+
     function showResult(msg) {
       setTimeout(() => {
         if (chances === 0) {
@@ -353,6 +454,7 @@
 
     function draw() {
       drawField();
+      drawDefenders();
       drawGoalie();
       drawPlayer();
       drawBall();
@@ -362,10 +464,19 @@
       if (gameState === 'playing') {
         updatePlayer();
         updateGoalie();
+        updateDefenders();
         updateBall();
+        checkDefenderCollision();
         scoreboard.innerHTML = `Gols: ${score} | Chances restantes: ${chances}`;
       }
-      draw();
+      if (gameState === 'dribble') {
+        updateGoalie();
+        updateDefenders();
+        draw();
+        scoreboard.innerHTML = `Drible! Clique no botão rapidamente para driblar o zagueiro!<br>Gols: ${score} | Chances restantes: ${chances}`;
+      } else {
+        draw();
+      }
       if (gameState !== 'over') {
         requestAnimationFrame(gameLoop);
       }
