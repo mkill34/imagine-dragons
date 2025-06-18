@@ -1,20 +1,70 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Playlist Imagine Dragons</title>
+  <meta charset="UTF-8">
+  <title>Chat IA tipo Copilot / ChatGPT</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f2f2; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px #0001; }
+    .chat-box { border: 1px solid #ccc; min-height: 300px; padding: 12px; margin-bottom: 12px; background: #fafafa; border-radius: 4px; }
+    .msg { margin: 6px 0; }
+    .msg.user b { color: #007bff; }
+    .msg.ia b { color: #1cb97c; }
+    .controls { display: flex; gap: 8px; }
+    .controls input { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #bbb; }
+    .controls button { padding: 8px 18px; border-radius: 4px; border: none; background: #1cb97c; color: #fff; font-weight: bold; cursor: pointer; }
+    .controls button:active { background: #179f67; }
+  </style>
 </head>
 <body>
-    <h1>Imagine Dragons - Playlist Spotify</h1>
-    <!-- Player embutido do Spotify -->
-    <iframe style="border-radius:12px" 
-        src="https://open.spotify.com/embed/playlist/37i9dQZF1DZ06evO2LjPjM?utm_source=generator" 
-        width="100%" 
-        height="380" 
-        frameborder="0" 
-        allowfullscreen="" 
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-        loading="lazy">
-    </iframe>
+  <div class="container">
+    <h2>Chat IA tipo Copilot / ChatGPT</h2>
+    <div class="chat-box" id="chatBox"></div>
+    <div class="controls">
+      <input id="inputMsg" type="text" placeholder="Digite sua pergunta..." autocomplete="off"/>
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+  </div>
+  <script>
+    const chat = [];
+    const chatBox = document.getElementById('chatBox');
+    const inputMsg = document.getElementById('inputMsg');
+
+    function renderChat() {
+      chatBox.innerHTML = '';
+      chat.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'msg ' + (msg.sender === 'Você' ? 'user' : 'ia');
+        div.innerHTML = `<b>${msg.sender}:</b> ${msg.text}`;
+        chatBox.appendChild(div);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = inputMsg.value.trim();
+      if (!text) return;
+      chat.push({ sender: 'Você', text });
+      renderChat();
+      inputMsg.value = '';
+      inputMsg.focus();
+
+      try {
+        const res = await fetch('http://localhost:3001/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
+        chat.push({ sender: 'IA', text: data.response || '[Erro na resposta da IA]' });
+        renderChat();
+      } catch {
+        chat.push({ sender: 'IA', text: '[Erro ao conectar com o servidor]' });
+        renderChat();
+      }
+    }
+
+    inputMsg.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+  </script>
 </body>
 </html>
