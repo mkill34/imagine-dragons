@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Gojo vs Sukuna - Jujutsu Kaisen (Mangá)</title>
+    <title>Itadori vs Sukuna - Jujutsu Kaisen (Mangá)</title>
     <style>
         body {
             background: linear-gradient(135deg, #1a1320 0%, #7e264e 100%);
@@ -69,7 +69,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Gojo vs Sukuna<br><span style="font-size:0.7em;font-weight:400;">(Baseado no mangá)</span></h1>
+        <h1>Itadori vs Sukuna<br><span style="font-size:0.7em;font-weight:400;">(Baseado no mangá)</span></h1>
         <div class="manga">
             <b>Atenção:</b> Este jogo contém spoilers do mangá de Jujutsu Kaisen!
         </div>
@@ -80,115 +80,114 @@
     <script>
         // Estado dos personagens
         let state = {
-            gojoHP: 100,
+            itadoriHP: 100,
             sukunaHP: 100,
-            hollowPurpleUsado: false,
             mahorgaInvocado: false,
-            gojoMorto: false,
+            itadoriDespertou: false,
+            itadoriMorto: false,
+            sukunaDerrotado: false,
         };
 
         // Cenas do jogo
         const scenes = {
             inicio: {
-                texto: "Shinjuku vira palco da maior luta de feiticeiros. Gojo Satoru, o mais forte, enfrenta Ryomen Sukuna, o Rei das Maldições.<br>Ambos ativam seus domínios simultaneamente!",
+                texto: "O confronto final! Yuji Itadori, agora mais forte do que nunca, encara Sukuna, o Rei das Maldições, em Shinjuku.<br>Todos observam o destino do mundo ser decidido.",
                 escolhas: [
-                    { texto: "Gojo inicia com Infinito!", prox: "gojoInfinito" },
-                    { texto: "Sukuna inicia com Santuário Malevolente!", prox: "sukunaDominio" }
+                    { texto: "Itadori ataca primeiro!", prox: "itadoriAtaque" },
+                    { texto: "Sukuna provoca Itadori!", prox: "sukunaProvoca" }
                 ]
             },
-            gojoInfinito: {
-                texto: "Gojo ativa o Infinito, bloqueando ataques diretos de Sukuna. O público observa em tensão.",
+            itadoriAtaque: {
+                texto: "Itadori avança com sua força monstruosa, usando Black Flash! Sukuna sente o impacto.",
+                efeito: () => {
+                    state.sukunaHP -= 25;
+                },
                 escolhas: [
-                    { texto: "Atacar com Azul", prox: "gojoAzul" },
-                    { texto: "Ativar Expansão de Domínio", prox: "gojoDominio" }
+                    { texto: "Sukuna ativa domínio!", prox: "sukunaDominio" },
+                    { texto: "Sukuna invoca Mahoraga!", prox: "sukunaMahoraga" }
+                ]
+            },
+            sukunaProvoca: {
+                texto: "Sukuna sorri e provoca: \"É só isso que você tem, Yuji?\" O ambiente se enche de tensão.",
+                escolhas: [
+                    { texto: "Itadori desperta sua verdadeira força!", prox: "itadoriDespertar" }
+                ]
+            },
+            itadoriDespertar: {
+                texto: "A raiva e determinação de Itadori fazem sua energia amaldiçoada explodir. Ele entende o propósito de seus amigos e sente o apoio de todos.",
+                efeito: () => {
+                    state.itadoriDespertou = true;
+                    state.sukunaHP -= 15;
+                },
+                escolhas: [
+                    { texto: "Itadori ataca com tudo!", prox: "itadoriBlackFlashCombo" }
+                ]
+            },
+            itadoriBlackFlashCombo: {
+                texto: "Itadori acerta uma sequência de Black Flashs! Sukuna é surpreendido pela força de vontade de Yuji.",
+                efeito: () => {
+                    state.sukunaHP -= 35;
+                },
+                escolhas: [
+                    { texto: "Sukuna invoca Mahoraga!", prox: "sukunaMahoraga" },
+                    { texto: "Sukuna ativa domínio!", prox: "sukunaDominio" }
                 ]
             },
             sukunaDominio: {
-                texto: "Sukuna expande o Santuário Malevolente! O domínio corta tudo ao redor, tornando impossível escapar.",
+                texto: "Sukuna ativa o 'Santuário Malevolente'. Cortes multidimensionais ameaçam Itadori!",
                 efeito: () => {
-                    state.gojoHP -= 25;
+                    if (state.itadoriDespertou) {
+                        state.itadoriHP -= 20;
+                    } else {
+                        state.itadoriHP -= 35;
+                    }
                 },
                 escolhas: [
-                    { texto: "Gojo resiste e contra-ataca!", prox: "gojoAzul" }
-                ]
-            },
-            gojoAzul: {
-                texto: "Gojo dispara 'Azul', tentando distorcer Sukuna. Mas Sukuna sorri, já tendo analisado a técnica.",
-                efeito: () => {
-                    state.sukunaHP -= 20;
-                },
-                escolhas: [
-                    { texto: "Sukuna invoca Mahoraga!", prox: "sukunaMahoraga" },
-                    { texto: "Gojo tenta Hollow Purple", prox: "gojoHollowPurple" }
-                ]
-            },
-            gojoDominio: {
-                texto: "Gojo expande o 'Muryoku Kukan' (Unlimited Void)! Sukuna sente a mente sobrecarregada, mas rapidamente adapta seu domínio.",
-                efeito: () => {
-                    state.sukunaHP -= 25;
-                    state.gojoHP -= 15; // Ambos sofrem danos devido ao choque de domínios
-                },
-                escolhas: [
-                    { texto: "Sukuna invoca Mahoraga!", prox: "sukunaMahoraga" },
-                    { texto: "Lutar até o fim!", prox: "climax" }
-                ]
-            },
-            gojoHollowPurple: {
-                texto: "Gojo lança Hollow Purple! Uma esfera destrutiva atravessa o campo de batalha.",
-                efeito: () => {
-                    state.sukunaHP -= 35;
-                    state.hollowPurpleUsado = true;
-                },
-                escolhas: [
-                    { texto: "Sukuna invoca Mahoraga!", prox: "sukunaMahoraga" },
-                    { texto: "Gojo pressiona!", prox: "climax" }
+                    { texto: "Itadori resiste e contra-ataca!", prox: "itadoriResiste" }
                 ]
             },
             sukunaMahoraga: {
-                texto: "Sukuna invoca Mahoraga, o Shikigami que se adapta a qualquer técnica! Gojo sente o perigo iminente.",
+                texto: "Sukuna invoca Mahoraga para pressionar Itadori. A luta se torna desesperadora!",
                 efeito: () => {
                     state.mahorgaInvocado = true;
-                    state.gojoHP -= 20;
+                    state.itadoriHP -= 30;
                 },
                 escolhas: [
-                    { texto: "Gojo tenta novo Hollow Purple", prox: "gojoHollowPurpleMahoraga" },
-                    { texto: "Gojo tenta proteger civis", prox: "gojoProteger" }
+                    { texto: "Itadori luta com Mahoraga!", prox: "itadoriVsMahoraga" }
                 ]
             },
-            gojoHollowPurpleMahoraga: {
-                texto: "Gojo dispara Hollow Purple novamente, mas Mahoraga adapta-se e Sukuna utiliza a brecha para atacar.",
+            itadoriVsMahoraga: {
+                texto: "Itadori, usando sua criatividade e poder, consegue lidar com Mahoraga. Ele se sacrifica, mas destrói o Shikigami.",
                 efeito: () => {
-                    state.gojoHP -= 50;
+                    state.itadoriHP -= 15;
+                    state.sukunaHP -= 20;
                 },
                 escolhas: [
-                    { texto: "O que acontece?", prox: "gojoMorte" }
+                    { texto: "Enfrentar Sukuna!", prox: "climax" }
                 ]
             },
-            gojoProteger: {
-                texto: "Ao tentar proteger civis, Gojo se expõe. Sukuna aproveita e atinge Gojo com um corte multidimensional.",
-                efeito: () => {
-                    state.gojoHP -= 60;
-                },
+            itadoriResiste: {
+                texto: "Mesmo ferido, Yuji se levanta. Lembra de suas promessas e de todos que lutaram por ele. Sua energia amaldiçoada se eleva ao máximo.",
                 escolhas: [
-                    { texto: "O que acontece?", prox: "gojoMorte" }
+                    { texto: "Itadori acerta o soco decisivo!", prox: "final" }
                 ]
             },
             climax: {
-                texto: "A batalha atinge o ápice. Gojo e Sukuna estão exaustos, mas Sukuna usa a adaptação de Mahoraga para lançar o golpe decisivo.",
-                efeito: () => {
-                    state.gojoHP -= 80;
-                },
+                texto: "Ambos exaustos, Itadori e Sukuna trocam golpes ferozes. O próximo ataque decidirá tudo!",
                 escolhas: [
-                    { texto: "Desfecho...", prox: "gojoMorte" }
+                    { texto: "Itadori reúne toda sua força!", prox: "final" }
                 ]
             },
-            gojoMorte: {
+            final: {
                 texto: () => {
-                    state.gojoMorto = true;
-                    if(state.gojoHP <= 0) {
-                        return "<span class='death'>Gojo é partido ao meio por Sukuna usando a técnica adaptada de Mahoraga. O mais forte caiu.<br><br>Sukuna ergue-se como vencedor, mas o mundo da feitiçaria nunca mais será o mesmo.</span><br><br><b>Fim do jogo (baseado no mangá)</b><br><br>Deseja tentar outro caminho?";
+                    if (state.sukunaHP <= 0 || (state.itadoriDespertou && state.sukunaHP < 30)) {
+                        state.sukunaDerrotado = true;
+                        return "<span class='death'>Com um grito, Itadori desfere o golpe final. Sukuna finalmente cai, derrotado!<br><br>O mundo é salvo graças à determinação de Yuji e seus amigos.</span><br><br><b>Fim do jogo (baseado no mangá)</b><br><br>Deseja jogar novamente?";
+                    } else if (state.itadoriHP <= 0) {
+                        state.itadoriMorto = true;
+                        return "<span class='death'>Itadori cai, vencido pelo poder avassalador de Sukuna.<br><br>O Rei das Maldições triunfa... mas o mundo ainda resiste à esperança.</span><br><br><b>Fim do jogo</b><br><br>Deseja tentar outro caminho?";
                     } else {
-                        return "Gojo resiste, mas está gravemente ferido. Sukuna se aproxima para o golpe final...";
+                        return "A luta continua, mas ambos estão no limite. Qual será seu próximo passo?";
                     }
                 },
                 escolhas: [
@@ -197,11 +196,12 @@
             },
             reset: {
                 efeito: () => {
-                    state.gojoHP = 100;
+                    state.itadoriHP = 100;
                     state.sukunaHP = 100;
-                    state.hollowPurpleUsado = false;
                     state.mahorgaInvocado = false;
-                    state.gojoMorto = false;
+                    state.itadoriDespertou = false;
+                    state.itadoriMorto = false;
+                    state.sukunaDerrotado = false;
                 },
                 escolhas: [
                     { texto: "Começar!", prox: "inicio" }
@@ -215,8 +215,9 @@
             if (cena.efeito) cena.efeito();
 
             // Atualiza status
-            let st = `Gojo HP: <b>${state.gojoHP}</b> | Sukuna HP: <b>${state.sukunaHP}</b>`;
-            if(state.gojoMorto) st += " <span class='death'>Gojo está morto!</span>";
+            let st = `Itadori HP: <b>${state.itadoriHP}</b> | Sukuna HP: <b>${state.sukunaHP}</b>`;
+            if(state.itadoriMorto) st += " <span class='death'>Itadori está morto!</span>";
+            if(state.sukunaDerrotado) st += " <span class='death'>Sukuna foi derrotado!</span>";
             document.getElementById('status').innerHTML = st;
 
             // Mostra texto da cena
