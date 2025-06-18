@@ -96,6 +96,19 @@
       0% { box-shadow: 0 0 8px #ffe60080; }
       100% { box-shadow: 0 0 18px #ffe600cc; }
     }
+    .keyhint {
+      font-size: 0.9em;
+      color: #ffe600;
+      background: #242424;
+      border-radius: 5px;
+      padding: 2px 7px;
+      margin-left: 0.3em;
+      margin-right: 0.3em;
+      font-weight: bold;
+      letter-spacing: 1px;
+      border: 1.5px solid #ffe60090;
+      vertical-align: middle;
+    }
   </style>
 </head>
 <body>
@@ -103,14 +116,15 @@
   <div id="container">
     <div id="scoreboard"></div>
     <div id="instructions">
-      Mova-se com as <b>setas</b>. Pressione <b>Espaço</b> para chutar!<br>
-      <b>Use skills antes de chutar:</b>
+      Mova-se com as <b>setas</b>. <b>Espaço</b> para chutar!<br>
+      Skills: <span class="keyhint">Z</span> Kaiser Impact | <span class="keyhint">X</span> Chute Curvo | <span class="keyhint">Q</span> Drible<br>
+      Ative skills antes de chutar, drible apenas quando aparecer o botão!
     </div>
     <div class="skills">
-      <button id="kaiserBtn">Kaiser Impact ⚡</button>
-      <button id="curvoBtn">Chute Curvo 🌀</button>
+      <button id="kaiserBtn">Kaiser Impact ⚡ <span class="keyhint">Z</span></button>
+      <button id="curvoBtn">Chute Curvo 🌀 <span class="keyhint">X</span></button>
     </div>
-    <button id="dribbleBtn">Driblar!</button>
+    <button id="dribbleBtn">Driblar! <span class="keyhint">Q</span></button>
     <canvas id="game" width="500" height="320"></canvas>
     <button id="restart">Jogar Novamente</button>
   </div>
@@ -311,7 +325,24 @@
     // Movimentação
     let keys = {};
     document.addEventListener('keydown', e => {
-      if (gameState === 'playing' && !dribbleWindow) {
+      // Atalhos para skills (z/x) e drible (q)
+      if (e.key === 'z' || e.key === 'Z') {
+        e.preventDefault();
+        if (!ball.moving && gameState === "playing" && !dribbleWindow) {
+          kaiserActive = !kaiserActive;
+          kaiserBtn.classList.toggle('active', kaiserActive);
+        }
+      } else if (e.key === 'x' || e.key === 'X') {
+        e.preventDefault();
+        if (!ball.moving && gameState === "playing" && !dribbleWindow) {
+          curvoActive = !curvoActive;
+          curvoBtn.classList.toggle('active', curvoActive);
+        }
+      } else if ((e.key === 'q' || e.key === 'Q') && dribbleWindow && !dribbleSuccess) {
+        e.preventDefault();
+        triggerDribble();
+      }
+      else if (gameState === 'playing' && !dribbleWindow) {
         keys[e.key] = true;
         if (e.key === ' ' && !ball.moving) {
           kickBall();
@@ -418,7 +449,7 @@
       }
     }
 
-    dribbleBtn.onclick = () => {
+    function triggerDribble() {
       if (dribbleWindow && !dribbleSuccess) {
         dribbleSuccess = true;
         dribbleWindow = false;
@@ -429,7 +460,9 @@
         player.y -= 24;
         if (player.y < 80 + player.r) player.y = 80 + player.r + 2;
       }
-    };
+    }
+
+    dribbleBtn.onclick = triggerDribble;
 
     function showResult(msg) {
       setTimeout(() => {
@@ -473,7 +506,7 @@
         updateGoalie();
         updateDefenders();
         draw();
-        scoreboard.innerHTML = `Drible! Clique no botão rapidamente para driblar o zagueiro!<br>Gols: ${score} | Chances restantes: ${chances}`;
+        scoreboard.innerHTML = `Drible! Pressione <span class="keyhint">Q</span> ou clique no botão para driblar o zagueiro!<br>Gols: ${score} | Chances restantes: ${chances}`;
       } else {
         draw();
       }
@@ -493,12 +526,16 @@
 
     // Skills UI
     kaiserBtn.onclick = () => {
-      kaiserActive = !kaiserActive;
-      kaiserBtn.classList.toggle('active', kaiserActive);
+      if (!ball.moving && gameState === "playing" && !dribbleWindow) {
+        kaiserActive = !kaiserActive;
+        kaiserBtn.classList.toggle('active', kaiserActive);
+      }
     };
     curvoBtn.onclick = () => {
-      curvoActive = !curvoActive;
-      curvoBtn.classList.toggle('active', curvoActive);
+      if (!ball.moving && gameState === "playing" && !dribbleWindow) {
+        curvoActive = !curvoActive;
+        curvoBtn.classList.toggle('active', curvoActive);
+      }
     };
 
     // Inicializa
