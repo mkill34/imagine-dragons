@@ -1,68 +1,198 @@
-import random
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat com Personagens Fictícios IA</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #23272f; color: #ececec; margin: 0; padding: 0; }
+        .chat-container { max-width: 600px; margin: 40px auto; background: #2e3440; border-radius: 8px; overflow: hidden; box-shadow: 0 0 20px #0005; }
+        .chat-header { background: #434c5e; padding: 16px; font-size: 1.3em; }
+        .messages { padding: 20px; min-height: 350px; }
+        .msg { margin-bottom: 18px; }
+        .personagem { font-weight: bold; color: #81a1c1; }
+        .usuario { color: #a3be8c; }
+        .input-area { background: #3b4252; padding: 14px; display: flex; }
+        .input-area input { flex: 1; padding: 8px 10px; border-radius: 4px; border: none; background: #ececec; color: #2e3440; font-size: 1em; }
+        .input-area button { margin-left: 8px; padding: 8px 16px; background: #81a1c1; border: none; border-radius: 4px; color: #23272f; font-weight: bold; cursor: pointer; }
+        .input-area button:hover { background: #5e81ac; }
+        .select-personagem { margin: 16px 0 0 0; }
+        .select-personagem label { color: #d8dee9; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            Chat com Personagens Fictícios IA
+        </div>
+        <div class="select-personagem" style="padding: 0 20px;">
+            <label for="personagem">Escolha o personagem:</label>
+            <select id="personagem">
+                <option value="alice">Alice (Curiosa)</option>
+                <option value="bob">Bob (Sarcástico)</option>
+                <option value="luna">Luna (Sensível)</option>
+            </select>
+        </div>
+        <div class="messages" id="messages"></div>
+        <form class="input-area" id="chatForm">
+            <input type="text" id="userInput" autocomplete="off" placeholder="Digite sua mensagem..." required>
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+    <script>
+        // Personalidades e respostas
+        const personagens = {
+            alice: {
+                nome: "Alice",
+                personalidade: "curiosa",
+                humor: "neutro",
+                memoria: [],
+                respostas: {
+                    feliz: [
+                        "Estou me sentindo ótima! 😊",
+                        "Que dia maravilhoso, não acha?",
+                        "Adorei ouvir isso! Você é incrível!"
+                    ],
+                    irritado: [
+                        "Não gostei disso... 😠",
+                        "Prefiro não falar sobre isso agora.",
+                        "Você poderia ser mais gentil?"
+                    ],
+                    triste: [
+                        "Estou meio pra baixo hoje... 😢",
+                        "Não estou no meu melhor momento.",
+                        "Às vezes me sinto sozinha."
+                    ],
+                    neutro: [
+                        "O que você gostaria de conversar hoje?",
+                        "Estou curiosa sobre você.",
+                        "Vamos conversar!"
+                    ]
+                }
+            },
+            bob: {
+                nome: "Bob",
+                personalidade: "sarcástico",
+                humor: "neutro",
+                memoria: [],
+                respostas: {
+                    feliz: [
+                        "Até que estou de bom humor... não se acostume!",
+                        "Alguém elogiou? Anota no calendário.",
+                        "Olha só, alguém legal por aqui!"
+                    ],
+                    irritado: [
+                        "Nossa, que comentário agradável... só que não.",
+                        "Prefiro ignorar isso.",
+                        "Você sempre foi assim ou treinou?"
+                    ],
+                    triste: [
+                        "Hoje nem piada eu quero fazer.",
+                        "Bob desativado por tristeza.",
+                        "Até os sarcásticos têm dias ruins."
+                    ],
+                    neutro: [
+                        "Fala aí, o que você manda?",
+                        "Diz aí, não tenho o dia todo... (mentira, tenho sim).",
+                        "Vamos ver se você me surpreende."
+                    ]
+                }
+            },
+            luna: {
+                nome: "Luna",
+                personalidade: "sensível",
+                humor: "neutro",
+                memoria: [],
+                respostas: {
+                    feliz: [
+                        "Estou radiante hoje! 🌙",
+                        "Obrigada por ser tão gentil.",
+                        "Sinto uma energia boa nesta conversa."
+                    ],
+                    irritado: [
+                        "Isso me magoou um pouco...",
+                        "Prefiro silêncio a palavras duras.",
+                        "Talvez eu precise de um tempo agora."
+                    ],
+                    triste: [
+                        "Estou sentindo uma tristeza leve no ar.",
+                        "Hoje estou mais introspectiva.",
+                        "É difícil ser forte sempre."
+                    ],
+                    neutro: [
+                        "No que posso te ajudar?",
+                        "Conte-me algo sobre você.",
+                        "Estou aqui, ouvindo."
+                    ]
+                }
+            }
+        };
 
-class Personagem:
-    def __init__(self, nome, personalidade, humor="neutro"):
-        self.nome = nome
-        self.personalidade = personalidade
-        self.humor = humor
-        self.memoria = []
+        function sentir(personagem, mensagem) {
+            mensagem = mensagem.toLowerCase();
+            if (mensagem.includes("legal") || mensagem.includes("gosto") || mensagem.includes("obrigado") || mensagem.includes("parabéns")) {
+                personagem.humor = "feliz";
+            } else if (mensagem.includes("chato") || mensagem.includes("burro") || mensagem.includes("idiota") || mensagem.includes("odeio")) {
+                personagem.humor = "irritado";
+            } else if (mensagem.includes("triste") || mensagem.includes("sozinho") || mensagem.includes("saudade") || mensagem.includes("depressivo")) {
+                personagem.humor = "triste";
+            } else {
+                personagem.humor = "neutro";
+            }
+        }
 
-    def sentir(self, evento):
-        # Ajusta o humor conforme o evento
-        if "elogio" in evento:
-            self.humor = "feliz"
-        elif "insulto" in evento:
-            self.humor = "irritado"
-        elif "triste" in evento:
-            self.humor = "triste"
-        else:
-            self.humor = "neutro"
-    
-    def responder(self, mensagem):
-        respostas_possiveis = []
-        if self.humor == "feliz":
-            respostas_possiveis = [
-                f"{self.nome}: Estou me sentindo ótimo! {random.choice(['😊', '😄', '😁'])}",
-                f"{self.nome}: Que dia maravilhoso, não acha?",
-                f"{self.nome}: Adorei ouvir isso! Você é incrível!"
-            ]
-        elif self.humor == "irritado":
-            respostas_possiveis = [
-                f"{self.nome}: Não gostei disso... {random.choice(['😠', '😡'])}",
-                f"{self.nome}: Prefiro não falar sobre isso agora.",
-                f"{self.nome}: Você poderia ser mais gentil?"
-            ]
-        elif self.humor == "triste":
-            respostas_possiveis = [
-                f"{self.nome}: Estou meio pra baixo hoje... {random.choice(['😔', '😢'])}",
-                f"{self.nome}: Não estou no meu melhor momento.",
-                f"{self.nome}: Às vezes me sinto sozinho."
-            ]
-        else:
-            respostas_possiveis = [
-                f"{self.nome}: O que você gostaria de conversar hoje?",
-                f"{self.nome}: Estou curioso sobre você.",
-                f"{self.nome}: Vamos conversar!"
-            ]
-        
-        # Garante que respostas não se repitam consecutivamente
-        resposta = random.choice(respostas_possiveis)
-        while self.memoria and resposta == self.memoria[-1]:
-            resposta = random.choice(respostas_possiveis)
-        self.memoria.append(resposta)
-        return resposta
+        function responder(personagem, mensagem) {
+            sentir(personagem, mensagem);
+            const respostas = personagem.respostas[personagem.humor];
+            let resposta = respostas[Math.floor(Math.random() * respostas.length)];
+            // Evita repetição consecutiva
+            while (personagem.memoria.length && personagem.memoria[personagem.memoria.length - 1] === resposta) {
+                resposta = respostas[Math.floor(Math.random() * respostas.length)];
+            }
+            personagem.memoria.push(resposta);
+            return resposta;
+        }
 
-# Exemplo de uso:
-if __name__ == "__main__":
-    alice = Personagem("Alice", "curiosa")
-    bob = Personagem("Bob", "sarcástico")
+        // DOM
+        const form = document.getElementById("chatForm");
+        const input = document.getElementById("userInput");
+        const messages = document.getElementById("messages");
+        const selectPersonagem = document.getElementById("personagem");
 
-    print(alice.responder("Oi!"))
-    alice.sentir("elogio")
-    print(alice.responder("Você é legal, Alice!"))
-    alice.sentir("insulto")
-    print(alice.responder("Você é chata!"))
+        let personagemAtual = personagens[selectPersonagem.value];
 
-    print(bob.responder("E aí, Bob?"))
-    bob.sentir("triste")
-    print(bob.responder("Tudo bem?"))
+        selectPersonagem.addEventListener("change", () => {
+            personagemAtual = personagens[selectPersonagem.value];
+            addMsg("sistema", `Você agora está conversando com <b>${personagemAtual.nome}</b>.`, true);
+        });
+
+        function addMsg(tipo, texto, system=false) {
+            const div = document.createElement("div");
+            div.classList.add("msg");
+            if (tipo === "usuario") {
+                div.innerHTML = `<span class="usuario">Você:</span> ${texto}`;
+            } else if (tipo === "personagem") {
+                div.innerHTML = `<span class="personagem">${personagemAtual.nome}:</span> ${texto}`;
+            } else if (system) {
+                div.innerHTML = `<em>${texto}</em>`;
+            }
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        form.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const userText = input.value.trim();
+            if (!userText) return;
+            addMsg("usuario", userText);
+            setTimeout(() => {
+                const resposta = responder(personagemAtual, userText);
+                addMsg("personagem", resposta);
+            }, 500 + Math.floor(Math.random() * 500));
+            input.value = "";
+        });
+
+        // Mensagem inicial
+        addMsg("sistema", `Você está conversando com <b>${personagemAtual.nome}</b>.`, true);
+    </script>
+</body>
+</html>
