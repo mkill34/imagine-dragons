@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Chat com Personagens Fictícios</title>
+  <title>Chat com Personagens Fictícios Imersivo</title>
   <style>
     body { font-family: Arial, sans-serif; background: #23272f; color: #f2f2f2; }
     #container { width: 95%; max-width: 600px; margin: 40px auto; padding: 24px; background: #323846; border-radius: 10px; }
@@ -38,64 +38,47 @@
     </div>
   </div>
   <script>
-    // Respostas fictícias por personagem
-    const personagens = {
-      gandalf: {
-        nome: "Gandalf",
-        prefix: "Gandalf diz:",
-        respostas: [
-          "Tudo o que temos de decidir é o que fazer com o tempo que nos é dado.",
-          "Você não passará!",
-          "Até o menor pode mudar o curso do futuro.",
-          "Tenha coragem, meu amigo. Há sempre esperança.",
-          "Nunca se esqueça de que a verdadeira sabedoria está em saber que nada sabemos."
-        ]
-      },
-      darth_vader: {
-        nome: "Darth Vader",
-        prefix: "Darth Vader:",
-        respostas: [
-          "Eu sou seu pai.",
-          "Sinta o poder do lado sombrio da Força.",
-          "Sua falta de fé é perturbadora.",
-          "Junte-se a mim e juntos dominaremos a galáxia.",
-          "A Força é forte com você."
-        ]
-      },
-      sherlock: {
-        nome: "Sherlock Holmes",
-        prefix: "Sherlock Holmes:",
-        respostas: [
-          "Elementar, meu caro Watson.",
-          "Observe tudo, e não descarte nada.",
-          "A solução geralmente é mais simples do que parece.",
-          "Você percebe, mas não observa.",
-          "Nada escapa aos meus olhos atentos."
-        ]
-      },
-      pikachu: {
-        nome: "Pikachu",
-        prefix: "Pikachu:",
-        respostas: [
-          "Pika, pika!",
-          "Pikachu!",
-          "Pika-pika-chu!",
-          "Pikaaaaaa!",
-          "Pika?"
-        ]
-      },
-      ironman: {
-        nome: "Homem de Ferro",
-        prefix: "Homem de Ferro:",
-        respostas: [
-          "Eu sou o Homem de Ferro.",
-          "Gênio, bilionário, playboy, filantropo.",
-          "Vamos salvar o mundo... de novo.",
-          "Jarvis, prepare minha armadura.",
-          "Tenho um plano. Não é um bom plano, mas é um plano."
-        ]
+    // Função para gerar resposta imersiva de personagem
+    function respostaImersiva(personagem, pergunta) {
+      switch(personagem) {
+        case "gandalf":
+          return `<b>Gandalf:</b> ${respostaGandalf(pergunta)}`;
+        case "darth_vader":
+          return `<b>Darth Vader:</b> ${respostaVader(pergunta)}`;
+        case "sherlock":
+          return `<b>Sherlock Holmes:</b> ${respostaSherlock(pergunta)}`;
+        case "pikachu":
+          return `<b>Pikachu:</b> ${respostaPikachu(pergunta)}`;
+        case "ironman":
+          return `<b>Homem de Ferro:</b> ${respostaIronman(pergunta)}`;
+        default:
+          return "Personagem desconhecido.";
       }
-    };
+    }
+
+    function respostaGandalf(pergunta) {
+      return `Ah, meu jovem, vejo que perguntas: "${pergunta}". As estradas que percorremos são misteriosas, mas lembre-se: tudo o que temos de decidir é o que fazer com o tempo que nos é dado. Siga em frente com sabedoria, pois há mais coisas entre o céu e a Terra do que pode imaginar.`;
+    }
+
+    function respostaVader(pergunta) {
+      return `Você ousa perguntar: "${pergunta}"? Sinta o poder do lado sombrio da Força. Suas dúvidas só fortalecem minha determinação. Junte-se a mim, e juntos encontraremos a resposta... ou então, prepare-se para enfrentar as consequências.`;
+    }
+
+    function respostaSherlock(pergunta) {
+      return `Interessante. Você diz: "${pergunta}". Elementar! A solução está nos detalhes. Observe seus arredores, questione tudo e lembre-se: uma vez eliminado o impossível, o que sobra, por mais improvável que pareça, deve ser a verdade.`;
+    }
+
+    function respostaPikachu(pergunta) {
+      // Pikachu responde em "pikachuês" com emoção contextual
+      const emocionado = [
+        "Pika-pika! 😊", "Pikachu!! ⚡", "Pika pika chu!", "Pikaaa... pika!", "Pikachu? 🤔"
+      ];
+      return emocionado[Math.floor(Math.random() * emocionado.length)] + " (" + pergunta + ")";
+    }
+
+    function respostaIronman(pergunta) {
+      return `Você perguntou: "${pergunta}"? Bom, eu sou o Homem de Ferro. Se for um problema de tecnologia ou salvar o mundo, eu já resolvi antes do café da manhã. Jarvis, anote: mais uma pergunta genial respondida.`;
+    }
 
     const chatbox = document.getElementById('chatbox');
     const userInput = document.getElementById('userInput');
@@ -110,13 +93,6 @@
       chatbox.scrollTop = chatbox.scrollHeight;
     }
 
-    function respostaPersonagem(personagemKey, pergunta) {
-      const personagem = personagens[personagemKey];
-      // Resposta fictícia escolhida aleatoriamente
-      const idx = Math.floor(Math.random() * personagem.respostas.length);
-      return `${personagem.prefix} ${personagem.respostas[idx]}`;
-    }
-
     sendBtn.onclick = () => {
       const q = userInput.value.trim();
       if (q) {
@@ -124,8 +100,8 @@
         addMessage(q, 'user');
         userInput.value = '';
         setTimeout(() => {
-          addMessage(respostaPersonagem(personagemSelecionado, q), 'bot');
-        }, 600);
+          addMessage(respostaImersiva(personagemSelecionado, q), 'bot');
+        }, 700);
       }
     };
 
