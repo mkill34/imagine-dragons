@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Playlist Imagine Dragons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #212121;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            margin: 40px auto;
+            background: #333;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 16px #0f0f0f88;
+        }
+        h1 {
+            text-align: center;
+            color: #64ffda;
+        }
+        .music {
+            margin-bottom: 25px;
+            background: #444;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .music-title {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        audio {
+            width: 100%;
+            outline: none;
+        }
+        .link {
+            color: #64ffda;
+            text-decoration: none;
+            font-size: 0.95em;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Playlist Imagine Dragons</h1>
+        <div class="music">
+            <div class="music-title">Believer</div>
+            <!-- Use um arquivo local ou substitua pelo link de áudio MP3 -->
+            <audio controls>
+                <source src="believer.mp3" type="audio/mp3">
+                Seu navegador não suporta o elemento de áudio.
+            </audio>
+            <br>
+            <a class="link" href="https://www.youtube.com/watch?v=7wtfhZwyrcc" target="_blank">Ouça no YouTube</a>
+        </div>
+        <div class="music">
+            <div class="music-title">Radioactive</div>
+            <audio controls>
+                <source src="radioactive.mp3" type="audio/mp3">
+                Seu navegador não suporta o elemento de áudio.
+            </audio>
+            <br>
+            <a class="link" href="https://www.youtube.com/watch?v=ktvTqknDobU" target="_blank">Ouça no YouTube</a>
+        </div>
+        <div class="music">
+            <div class="music-title">Demons</div>
+            <audio controls>
+                <source src="demons.mp3" type="audio/mp3">
+                Seu navegador não suporta o elemento de áudio.
+            </audio>
+            <br>
+            <a class="link" href="https://www.youtube.com/watch?v=mWRsgZuwf_8" target="_blank">Ouça no YouTube</a>
+        </div>
+        <div class="music">
+            <div class="music-title">Thunder</div>
+            <audio controls>
+                <source src="thunder.mp3" type="audio/mp3">
+                Seu navegador não suporta o elemento de áudio.
+            </audio>
+            <br>
+            <a class="link" href="https://www.youtube.com/watch?v=fKopy74weus" target="_blank">Ouça no YouTube</a>
+        </div>
+        <div class="music">
+            <div class="music-title">Whatever It Takes</div>
+            <audio controls>
+                <source src="whatever_it_takes.mp3" type="audio/mp3">
+                Seu navegador não suporta o elemento de áudio.
+            </audio>
+            <br>
+            <a class="link" href="https://www.youtube.com/watch?v=gOsM-DYAEhY" target="_blank">Ouça no YouTube</a>
+        </div>
+    </div>
+</body>
+</html>
