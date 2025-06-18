@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Blue Lock 2D - Mini Jogo</title>
+  <title>Blue Lock 2D com Skills</title>
   <style>
     body {
       margin: 0;
@@ -43,6 +43,30 @@
       margin-bottom: 0.5rem;
       color: #eee;
     }
+    .skills {
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 1rem;
+    }
+    .skills button {
+      padding: 0.5rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 7px;
+      background: #00bfff;
+      color: #153e6b;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background .2s, color .2s;
+    }
+    .skills button.active {
+      background: #ffe600;
+      color: #222;
+    }
+    .skills button:active {
+      background: #1e90ff;
+      color: #fff;
+    }
     #restart {
       display: none;
       padding: 0.5rem 1.5rem;
@@ -61,10 +85,17 @@
   </style>
 </head>
 <body>
-  <h1>Blue Lock 2D</h1>
+  <h1>Blue Lock 2D - Skills</h1>
   <div id="container">
     <div id="scoreboard"></div>
-    <div id="instructions">Movimente-se com as <b>setas</b>. Pressione <b>Espaço</b> para chutar!</div>
+    <div id="instructions">
+      Movimente-se com as <b>setas</b>. Pressione <b>Espaço</b> para chutar!<br>
+      <b>Ative skills antes de chutar:</b>
+    </div>
+    <div class="skills">
+      <button id="kaiserBtn">Kaiser Impact ⚡</button>
+      <button id="curvoBtn">Chute Curvo 🌀</button>
+    </div>
     <canvas id="game" width="500" height="320"></canvas>
     <button id="restart">Jogar Novamente</button>
   </div>
@@ -73,38 +104,57 @@
     const ctx = canvas.getContext('2d');
     const scoreboard = document.getElementById('scoreboard');
     const restartBtn = document.getElementById('restart');
+    const kaiserBtn = document.getElementById('kaiserBtn');
+    const curvoBtn = document.getElementById('curvoBtn');
 
-    // Jogo
+    // Campo
     const field = {
       width: 500,
       height: 320,
       goal: {x: 200, y: 10, w: 100, h: 15}
     };
 
-    let player = {x: 250, y: 270, r: 16, speed: 3};
-    let ball = {x: 250, y: 260, r: 8, speed: 5, vx: 0, vy: 0, moving: false};
-    let goalie = {x: 250, y: 28, r: 18, speed: 2.5, dir: 1};
-
+    // Estado do jogo
+    let player, ball, goalie;
     let score = 0;
     let chances = 3;
     let gameState = 'playing'; // 'playing', 'goal', 'miss', 'over'
 
+    // Skills
+    let kaiserActive = false;
+    let curvoActive = false;
+
+    function resetPositions() {
+      player = {x: field.width/2, y: field.height-50, r: 16, speed: 3};
+      ball = {
+        x: player.x,
+        y: player.y - 18,
+        r: 8,
+        speed: 5,
+        vx: 0, vy: 0,
+        moving: false,
+        curveT: 0, // para chute curvo
+        curveMaxT: 60,
+        curveDir: 0,
+        curving: false
+      };
+      goalie = {
+        x: field.width/2 + Math.random() * 30 - 15,
+        y: 28,
+        r: 18,
+        speed: 2.5,
+        dir: Math.random() > 0.5 ? 1 : -1
+      };
+    }
+
     function drawField() {
-      // Campo
       ctx.fillStyle = '#60b347';
       ctx.fillRect(0, 0, field.width, field.height);
-
-      // Gol
       ctx.fillStyle = '#fff';
       ctx.fillRect(field.goal.x, field.goal.y, field.goal.w, field.goal.h);
       ctx.strokeStyle = '#fff';
       ctx.strokeRect(field.goal.x, field.goal.y, field.goal.w, 28);
-
-      // Área
-      ctx.strokeStyle = '#fff';
       ctx.strokeRect(field.goal.x - 40, field.goal.y + 15, field.goal.w + 80, 55);
-
-      // Linha central
       ctx.strokeStyle = '#fff8';
       ctx.beginPath();
       ctx.moveTo(0, field.height / 2);
@@ -119,8 +169,6 @@
       ctx.fill();
       ctx.strokeStyle = '#fff';
       ctx.stroke();
-
-      // "Cabeça"
       ctx.beginPath();
       ctx.arc(player.x, player.y - 9, 6, 0, 2 * Math.PI);
       ctx.fillStyle = '#42a5f5';
@@ -134,11 +182,31 @@
       ctx.fill();
       ctx.strokeStyle = '#222';
       ctx.stroke();
-      // detalhes
       ctx.beginPath();
       ctx.arc(ball.x + 2, ball.y + 2, 2.5, 0, 2 * Math.PI);
       ctx.fillStyle = '#ccc';
       ctx.fill();
+      // efeito visual das skills
+      if (kaiserActive && ball.moving) {
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.r+7, 0, 2*Math.PI);
+        ctx.strokeStyle = '#ffe600';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+      }
+      if (curvoActive && ball.moving) {
+        ctx.save();
+        ctx.globalAlpha = 0.45;
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.r+10, 0, 2*Math.PI);
+        ctx.strokeStyle = '#00eaff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+      }
     }
 
     function drawGoalie() {
@@ -148,8 +216,6 @@
       ctx.fill();
       ctx.strokeStyle = '#fff';
       ctx.stroke();
-
-      // "Cabeça"
       ctx.beginPath();
       ctx.arc(goalie.x, goalie.y - 9, 6, 0, 2 * Math.PI);
       ctx.fillStyle = '#ef5350';
@@ -157,7 +223,6 @@
     }
 
     function updateGoalie() {
-      // Goleiro só se move horizontalmente dentro do gol
       goalie.x += goalie.dir * goalie.speed;
       if (goalie.x - goalie.r < field.goal.x) {
         goalie.x = field.goal.x + goalie.r;
@@ -189,39 +254,63 @@
       if (keys['ArrowRight'] && player.x + player.r < field.width) player.x += player.speed;
       if (keys['ArrowUp'] && player.y - player.r > 80) player.y -= player.speed;
       if (keys['ArrowDown'] && player.y + player.r < field.height) player.y += player.speed;
-      // Bola acompanha o jogador
       ball.x = player.x;
       ball.y = player.y - player.r - ball.r - 2;
     }
 
     function kickBall() {
-      // Calcula direção para o gol (meio do gol, com leve randomização)
+      // Definindo skill power
+      let speedMult = 1;
+      if (kaiserActive) speedMult = 2.3;
+      let isCurvo = curvoActive;
+
+      // Direção inicial para o gol, com leve aleatoriedade
       const targetX = field.goal.x + field.goal.w/2 + (Math.random()-0.5)*55;
       const targetY = field.goal.y + field.goal.h + 5;
       const dx = targetX - ball.x;
       const dy = targetY - ball.y;
       const dist = Math.sqrt(dx*dx + dy*dy);
-      ball.vx = ball.speed * dx / dist;
-      ball.vy = ball.speed * dy / dist;
+      ball.vx = ball.speed * speedMult * dx / dist;
+      ball.vy = ball.speed * speedMult * dy / dist;
       ball.moving = true;
+
+      // CURVO: inicia curva
+      if (isCurvo) {
+        ball.curving = true;
+        ball.curveT = 0;
+        // curva para esquerda ou direita, random
+        ball.curveDir = Math.random() > 0.5 ? 1 : -1;
+      } else {
+        ball.curving = false;
+      }
+      // skills só afetam o próximo chute
+      kaiserActive = false;
+      curvoActive = false;
+      kaiserBtn.classList.remove('active');
+      curvoBtn.classList.remove('active');
     }
 
     function updateBall() {
       if (!ball.moving) return;
+      // Curvo: aplica curva na trajetória usando seno para variar vx
+      if (ball.curving && ball.curveT < ball.curveMaxT) {
+        // aumenta a curva no começo, diminui no fim
+        const curveStrength = 2.1 * ball.curveDir * Math.sin(Math.PI * ball.curveT / ball.curveMaxT);
+        ball.vx += curveStrength * 0.05;
+        ball.curveT++;
+      }
       ball.x += ball.vx;
       ball.y += ball.vy;
 
-      // Checa colisão com goleiro
+      // Colisão com goleiro
       const distGoalie = Math.hypot(ball.x - goalie.x, ball.y - goalie.y);
       if (distGoalie < ball.r + goalie.r) {
-        // Defesa!
         gameState = 'miss';
         chances--;
         showResult('Defendido pelo goleiro! 😱');
         return;
       }
-
-      // Checa se entrou no gol
+      // Gol
       if (
         ball.y - ball.r <= field.goal.y + field.goal.h &&
         ball.x >= field.goal.x &&
@@ -232,8 +321,7 @@
         showResult('GOOOOL! ⚽️');
         return;
       }
-
-      // Checa se passou do campo
+      // Fora do campo
       if (ball.y < 0 || ball.x < 0 || ball.x > field.width) {
         gameState = 'miss';
         chances--;
@@ -263,16 +351,6 @@
       }, 700);
     }
 
-    function resetPositions() {
-      player.x = field.width/2;
-      player.y = field.height-50;
-      ball.x = player.x;
-      ball.y = player.y - player.r - ball.r - 2;
-      ball.vx = 0; ball.vy = 0; ball.moving = false;
-      goalie.x = field.width/2 + Math.random() * 30 - 15;
-      goalie.dir = Math.random() > 0.5 ? 1 : -1;
-    }
-
     function draw() {
       drawField();
       drawGoalie();
@@ -300,6 +378,16 @@
       restartBtn.style.display = 'none';
       resetPositions();
       gameLoop();
+    };
+
+    // Skills UI
+    kaiserBtn.onclick = () => {
+      kaiserActive = !kaiserActive;
+      kaiserBtn.classList.toggle('active', kaiserActive);
+    };
+    curvoBtn.onclick = () => {
+      curvoActive = !curvoActive;
+      curvoBtn.classList.toggle('active', curvoActive);
     };
 
     // Inicializa
