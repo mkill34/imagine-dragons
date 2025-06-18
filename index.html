@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Chat com Personagens Fictícios Imersivo</title>
+  <title>Chat com Personagens Fictícios - Diálogo</title>
   <style>
     body { font-family: Arial, sans-serif; background: #23272f; color: #f2f2f2; }
     #container { width: 95%; max-width: 600px; margin: 40px auto; padding: 24px; background: #323846; border-radius: 10px; }
@@ -13,6 +13,9 @@
     .msg { margin: 10px 0; }
     .user { text-align: right; color: #a0e4b0; }
     .bot { text-align: left; color: #83bbff; }
+    .linha-dialogo { margin: 3px 0; }
+    .personagem { font-weight: bold; }
+    .usuario { font-weight: bold; color: #ced; }
     #inputRow { display: flex; }
     #userInput { flex: 1; padding: 10px; border-radius: 5px; border: none; }
     #sendBtn { padding: 10px 16px; background: #5b9aff; color: #fff; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
@@ -20,7 +23,7 @@
 </head>
 <body>
   <div id="container">
-    <h2>Converse com um Personagem Fictício</h2>
+    <h2>Diálogo com Personagem Fictício</h2>
     <div id="personagemRow">
       <label for="personagemSelect">Escolha o personagem:</label>
       <select id="personagemSelect">
@@ -38,46 +41,52 @@
     </div>
   </div>
   <script>
-    // Função para gerar resposta imersiva de personagem
-    function respostaImersiva(personagem, pergunta) {
-      switch(personagem) {
-        case "gandalf":
-          return `<b>Gandalf:</b> ${respostaGandalf(pergunta)}`;
-        case "darth_vader":
-          return `<b>Darth Vader:</b> ${respostaVader(pergunta)}`;
-        case "sherlock":
-          return `<b>Sherlock Holmes:</b> ${respostaSherlock(pergunta)}`;
-        case "pikachu":
-          return `<b>Pikachu:</b> ${respostaPikachu(pergunta)}`;
-        case "ironman":
-          return `<b>Homem de Ferro:</b> ${respostaIronman(pergunta)}`;
-        default:
-          return "Personagem desconhecido.";
-      }
+    // Funções de diálogo imersivo para cada personagem
+    function dialogoGandalf(pergunta) {
+      return `
+        <div class="linha-dialogo"><span class="usuario">Você:</span> ${pergunta}</div>
+        <div class="linha-dialogo"><span class="personagem">Gandalf:</span> Ah, jovem viajante, vejo que perguntas: "${pergunta}". Muitas vezes, buscamos respostas em lugares distantes, mas lembre-se: até o menor dos atos pode mudar o destino do mundo. O que mais aflige seu coração nesta jornada?</div>
+      `;
     }
-
-    function respostaGandalf(pergunta) {
-      return `Ah, meu jovem, vejo que perguntas: "${pergunta}". As estradas que percorremos são misteriosas, mas lembre-se: tudo o que temos de decidir é o que fazer com o tempo que nos é dado. Siga em frente com sabedoria, pois há mais coisas entre o céu e a Terra do que pode imaginar.`;
+    function dialogoVader(pergunta) {
+      return `
+        <div class="linha-dialogo"><span class="usuario">Você:</span> ${pergunta}</div>
+        <div class="linha-dialogo"><span class="personagem">Darth Vader:</span> Então você ousa me perguntar: "${pergunta}"? Saiba que a Força está sempre presente, mas poucos sabem usá-la. Escolha sabiamente seu caminho, pois só o lado sombrio lhe dará o poder que deseja. Qual é o seu próximo movimento?</div>
+      `;
     }
-
-    function respostaVader(pergunta) {
-      return `Você ousa perguntar: "${pergunta}"? Sinta o poder do lado sombrio da Força. Suas dúvidas só fortalecem minha determinação. Junte-se a mim, e juntos encontraremos a resposta... ou então, prepare-se para enfrentar as consequências.`;
+    function dialogoSherlock(pergunta) {
+      return `
+        <div class="linha-dialogo"><span class="usuario">Você:</span> ${pergunta}</div>
+        <div class="linha-dialogo"><span class="personagem">Sherlock Holmes:</span> Interessante observação: "${pergunta}". Elementar! Toda pergunta carrega pistas. Conte-me, há algum detalhe que você deixou escapar, ou podemos avançar direto à solução?</div>
+      `;
     }
-
-    function respostaSherlock(pergunta) {
-      return `Interessante. Você diz: "${pergunta}". Elementar! A solução está nos detalhes. Observe seus arredores, questione tudo e lembre-se: uma vez eliminado o impossível, o que sobra, por mais improvável que pareça, deve ser a verdade.`;
-    }
-
-    function respostaPikachu(pergunta) {
-      // Pikachu responde em "pikachuês" com emoção contextual
-      const emocionado = [
+    function dialogoPikachu(pergunta) {
+      // Pikachu responde em pikachuês e depois tenta ser fofo, imitando um diálogo
+      const emocao = [
         "Pika-pika! 😊", "Pikachu!! ⚡", "Pika pika chu!", "Pikaaa... pika!", "Pikachu? 🤔"
       ];
-      return emocionado[Math.floor(Math.random() * emocionado.length)] + " (" + pergunta + ")";
+      const fala = emocao[Math.floor(Math.random() * emocao.length)];
+      return `
+        <div class="linha-dialogo"><span class="usuario">Você:</span> ${pergunta}</div>
+        <div class="linha-dialogo"><span class="personagem">Pikachu:</span> ${fala} (Isso quer dizer que Pikachu está tentando te entender e quer brincar!)</div>
+      `;
+    }
+    function dialogoIronman(pergunta) {
+      return `
+        <div class="linha-dialogo"><span class="usuario">Você:</span> ${pergunta}</div>
+        <div class="linha-dialogo"><span class="personagem">Homem de Ferro:</span> Então, você me pergunta: "${pergunta}"? Bem, eu sou o Tony Stark. Se envolver tecnologia, já resolvi isso antes do almoço. Mas me diga, você quer salvar o mundo comigo ou só está curioso mesmo?</div>
+      `;
     }
 
-    function respostaIronman(pergunta) {
-      return `Você perguntou: "${pergunta}"? Bom, eu sou o Homem de Ferro. Se for um problema de tecnologia ou salvar o mundo, eu já resolvi antes do café da manhã. Jarvis, anote: mais uma pergunta genial respondida.`;
+    function respostaDialogo(personagem, pergunta) {
+      switch(personagem) {
+        case "gandalf": return dialogoGandalf(pergunta);
+        case "darth_vader": return dialogoVader(pergunta);
+        case "sherlock": return dialogoSherlock(pergunta);
+        case "pikachu": return dialogoPikachu(pergunta);
+        case "ironman": return dialogoIronman(pergunta);
+        default: return `<div class="linha-dialogo">Personagem desconhecido.</div>`;
+      }
     }
 
     const chatbox = document.getElementById('chatbox');
@@ -85,10 +94,10 @@
     const sendBtn = document.getElementById('sendBtn');
     const personagemSelect = document.getElementById('personagemSelect');
 
-    function addMessage(text, sender) {
+    function addMessage(html, sender) {
       const msgDiv = document.createElement('div');
       msgDiv.className = 'msg ' + sender;
-      msgDiv.innerHTML = text;
+      msgDiv.innerHTML = html;
       chatbox.appendChild(msgDiv);
       chatbox.scrollTop = chatbox.scrollHeight;
     }
@@ -97,11 +106,8 @@
       const q = userInput.value.trim();
       if (q) {
         const personagemSelecionado = personagemSelect.value;
-        addMessage(q, 'user');
+        addMessage(respostaDialogo(personagemSelecionado, q), 'bot');
         userInput.value = '';
-        setTimeout(() => {
-          addMessage(respostaImersiva(personagemSelecionado, q), 'bot');
-        }, 700);
       }
     };
 
