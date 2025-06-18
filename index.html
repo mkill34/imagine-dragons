@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Blue Lock 2D - Skills, Zagueiros e IA Melhorada</title>
+  <title>Blue Lock 2D - Ankle Breaker</title>
   <style>
     body {
       margin: 0;
@@ -112,7 +112,7 @@
   </style>
 </head>
 <body>
-  <h1>Blue Lock 2D - Skills, Zagueiros e IA Melhorada</h1>
+  <h1>Blue Lock 2D - Skills, Zagueiros, IA e Ankle Breaker</h1>
   <div id="container">
     <div id="scoreboard"></div>
     <div id="instructions">
@@ -152,6 +152,7 @@
     let dribbleWindow = false;
     let dribbleSuccess = false;
     let dribbleFailTimeout = null;
+    let ankleBreakerDuration = 1800; // ms
 
     // Skills
     let kaiserActive = false;
@@ -176,8 +177,8 @@
         y: 28,
         r: 18,
         speed: 2.5,
-        dir: 1,  // direção inicial, IA melhorada ajusta isso
-        reaction: 0.23 + Math.random()*0.16 // aleatório, para não ficar impossível
+        dir: 1,
+        reaction: 0.23 + Math.random()*0.16
       };
       defenders = [
         {
@@ -185,12 +186,16 @@
           y: 110,
           r: 16,
           speed: 2.2 + Math.random()*0.5,
+          state: "normal", // "normal" ou "anklebreaker"
+          ankleBreakerEnd: 0
         },
         {
           x: field.goal.x + field.goal.w - 30,
           y: 160,
           r: 16,
           speed: 2.2 + Math.random()*0.5,
+          state: "normal",
+          ankleBreakerEnd: 0
         }
       ];
       dribbleWindow = false;
@@ -276,72 +281,89 @@
 
     function drawDefenders() {
       defenders.forEach(def => {
-        ctx.beginPath();
-        ctx.arc(def.x, def.y, def.r, 0, 2 * Math.PI);
-        ctx.fillStyle = '#f7b731';
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(def.x, def.y - 8, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = '#e67e22';
-        ctx.fill();
+        if (def.state === "anklebreaker") {
+          ctx.save();
+          ctx.globalAlpha = 0.4;
+          ctx.beginPath();
+          ctx.arc(def.x, def.y, def.r, 0, 2 * Math.PI);
+          ctx.fillStyle = '#bbb';
+          ctx.fill();
+          ctx.strokeStyle = '#999';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(def.x, def.y - 8, 5, 0, 2 * Math.PI);
+          ctx.fillStyle = '#888';
+          ctx.fill();
+          // efeito "caído": desenha um X sobre o zagueiro
+          ctx.strokeStyle = "#999";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(def.x-def.r/2, def.y-def.r/2);
+          ctx.lineTo(def.x+def.r/2, def.y+def.r/2);
+          ctx.moveTo(def.x+def.r/2, def.y-def.r/2);
+          ctx.lineTo(def.x-def.r/2, def.y+def.r/2);
+          ctx.stroke();
+          ctx.restore();
+        } else {
+          ctx.beginPath();
+          ctx.arc(def.x, def.y, def.r, 0, 2 * Math.PI);
+          ctx.fillStyle = '#f7b731';
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(def.x, def.y - 8, 5, 0, 2 * Math.PI);
+          ctx.fillStyle = '#e67e22';
+          ctx.fill();
+        }
       });
       ctx.lineWidth = 1;
     }
 
     // IA do goleiro melhorada: segue a bola só se ela estiver vindo, reage ao chute, e "salta" para interceptar a bola
     function updateGoalie() {
-      // Quando a bola está chutada, o goleiro tenta ir para a trajetória do chute com leve atraso/reação
       if (ball.moving) {
-        // O goleiro tenta prever onde a bola cruzará a linha do gol
-        // Calcula a posição X onde a bola cruzará y = field.goal.y + field.goal.h
         let t = (field.goal.y + field.goal.h - ball.y) / ball.vy;
         let interceptX = ball.x + ball.vx * t;
-        // Se a bola está indo para baixo ou já passou do gol, fica parado
         if (t < 0 || isNaN(t) || !isFinite(t)) {
-          // nada
         } else {
-          // Move em direção ao interceptX, com velocidade e reação
           let diff = interceptX - goalie.x;
           goalie.x += diff * goalie.reaction;
-          // Limites do gol
           if (goalie.x - goalie.r < field.goal.x) goalie.x = field.goal.x + goalie.r;
           if (goalie.x + goalie.r > field.goal.x + field.goal.w) goalie.x = field.goal.x + field.goal.w - goalie.r;
         }
       } else {
-        // Antes do chute, o goleiro tenta acompanhar horizontalmente o jogador, mas com atraso
         let diff = player.x - goalie.x;
         goalie.x += diff * 0.07;
-        // Limites do gol
         if (goalie.x - goalie.r < field.goal.x) goalie.x = field.goal.x + goalie.r;
         if (goalie.x + goalie.r > field.goal.x + field.goal.w) goalie.x = field.goal.x + field.goal.w - goalie.r;
       }
     }
 
-    // Zagueiros agora perseguem o jogador
+    // Zagueiros perseguem o jogador, mas ficam "caídos" quando driblados
     function updateDefenders() {
+      let now = Date.now();
       defenders.forEach(def => {
-        // Só perseguem se o jogador não chutou ainda
-        if (!ball.moving && !dribbleWindow) {
-          // Move na direção do jogador com uma pequena aleatoriedade
+        // Recupera do ankle breaker após o tempo
+        if (def.state === "anklebreaker" && now >= def.ankleBreakerEnd) {
+          def.state = "normal";
+        }
+        // Zagueiro só persegue se não estiver em ankle breaker
+        if (def.state === "normal" && !ball.moving && !dribbleWindow) {
           let dx = player.x - def.x;
           let dy = player.y - def.y;
           let dist = Math.sqrt(dx*dx + dy*dy);
-          // Para não tremular quando muito próximo, só move se estiver longe
           if (dist > 1) {
             let normX = dx / dist;
             let normY = dy / dist;
-            // Pequena aleatoriedade para não ficarem iguais
             let rand = (Math.random()-0.5)*0.3;
             def.x += (normX + rand) * def.speed;
             def.y += (normY + rand) * def.speed;
           }
-          // Limites verticais para os zagueiros (ficam entre área e meio campo)
           if (def.y < 85) def.y = 85;
           if (def.y > field.height-60) def.y = field.height-60;
-          // Limites horizontais do campo
           if (def.x - def.r < 10) def.x = 10 + def.r;
           if (def.x + def.r > field.width-10) def.x = field.width-10 - def.r;
         }
@@ -351,7 +373,6 @@
     // Movimentação
     let keys = {};
     document.addEventListener('keydown', e => {
-      // Atalhos para skills (z/x) e drible (q)
       if (e.key === 'z' || e.key === 'Z') {
         e.preventDefault();
         if (!ball.moving && gameState === "playing" && !dribbleWindow) {
@@ -453,15 +474,16 @@
 
     function checkDefenderCollision() {
       if (ball.moving || dribbleWindow) return;
-      for (let def of defenders) {
+      for (let i=0; i<defenders.length; i++) {
+        let def = defenders[i];
+        if (def.state === "anklebreaker") continue;
         const dist = Math.hypot(player.x - def.x, player.y - def.y);
         if (dist < player.r + def.r + 6) {
-          // Drible ativado!
           dribbleWindow = true;
           dribbleSuccess = false;
           dribbleBtn.style.display = "inline-block";
+          dribbleBtn.dataset.defender = i;
           gameState = "dribble";
-          // Tempo para reagir
           dribbleFailTimeout = setTimeout(() => {
             if (!dribbleSuccess) {
               dribbleBtn.style.display = "none";
@@ -475,6 +497,12 @@
       }
     }
 
+    function ankleBreaker(defenderIndex) {
+      let def = defenders[defenderIndex];
+      def.state = "anklebreaker";
+      def.ankleBreakerEnd = Date.now() + ankleBreakerDuration;
+    }
+
     function triggerDribble() {
       if (dribbleWindow && !dribbleSuccess) {
         dribbleSuccess = true;
@@ -485,6 +513,11 @@
         // Efeito visual de drible (rápido avanço)
         player.y -= 24;
         if (player.y < 80 + player.r) player.y = 80 + player.r + 2;
+        // Deixa o zagueiro "caído" (ankle breaker)
+        if (dribbleBtn.dataset.defender !== undefined) {
+          ankleBreaker(Number(dribbleBtn.dataset.defender));
+          dribbleBtn.dataset.defender = "";
+        }
       }
     }
 
