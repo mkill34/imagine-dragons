@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Blue Lock 2D - Campo Retangular Proporcional</title>
+  <title>Blue Lock 2D - Play e Zagueiro Atacante</title>
   <style>
     body {
       margin: 0;
@@ -14,9 +14,7 @@
       color: #fff;
       font-family: Arial, sans-serif;
     }
-    h1 {
-      margin-top: 24px;
-    }
+    h1 { margin-top: 24px; }
     #container {
       margin-top: 24px;
       background: #222;
@@ -49,7 +47,7 @@
       display: flex;
       gap: 1rem;
     }
-    .skills button, #dribbleBtn {
+    .skills button, #dribbleBtn, #playBtn {
       padding: 0.5rem 1.5rem;
       font-size: 1rem;
       border: none;
@@ -64,7 +62,7 @@
       background: #ffe600;
       color: #222;
     }
-    .skills button:active, #dribbleBtn:active {
+    .skills button:active, #dribbleBtn:active, #playBtn:active {
       background: #1e90ff;
       color: #fff;
     }
@@ -97,6 +95,16 @@
       0% { box-shadow: 0 0 8px #ffe60080; }
       100% { box-shadow: 0 0 18px #ffe600cc; }
     }
+    #defenderGoalMsg {
+      color: #ff4444;
+      font-size: 1.1em;
+      margin-bottom: 0.7em;
+      font-weight: bold;
+      display: none;
+      background: #fff4;
+      padding: 0.5em 1.2em;
+      border-radius: 8px;
+    }
     .keyhint {
       font-size: 0.9em;
       color: #ffe600;
@@ -125,10 +133,24 @@
     #fullscreenBtn:hover {
       background: #fff38d;
     }
+    #playBtn {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      background: #ffe600;
+      color: #153e6b;
+      border: 2px solid #153e6b;
+      font-weight: bold;
+      border-radius: 8px;
+      box-shadow: 0 2px 7px #0002;
+      transition: background .2s;
+    }
+    #playBtn:hover {
+      background: #fff38d;
+    }
   </style>
 </head>
 <body>
-  <h1>Blue Lock 2D - Campo Retangular Proporcional</h1>
+  <h1>Blue Lock 2D - Play e Zagueiro Atacante</h1>
   <div id="container">
     <div id="scoreboard"></div>
     <div id="instructions">
@@ -136,7 +158,9 @@
       Skills: <span class="keyhint">Z</span> Kaiser Impact | <span class="keyhint">X</span> Chute Curvo | <span class="keyhint">Q</span> Drible<br>
       Ative skills antes de chutar, drible apenas quando aparecer o botão!
     </div>
+    <button id="playBtn">Play ▶️</button>
     <button id="fullscreenBtn">Tela Cheia</button>
+    <div id="defenderGoalMsg"></div>
     <div class="skills">
       <button id="kaiserBtn">Kaiser Impact ⚡ <span class="keyhint">Z</span></button>
       <button id="curvoBtn">Chute Curvo 🌀 <span class="keyhint">X</span></button>
@@ -155,6 +179,8 @@
     const curvoBtn = document.getElementById('curvoBtn');
     const dribbleBtn = document.getElementById('dribbleBtn');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const playBtn = document.getElementById('playBtn');
+    const defenderGoalMsg = document.getElementById('defenderGoalMsg');
 
     // Campo retangular e equilibrado para gameplay
     const field = {
@@ -167,11 +193,16 @@
     let player, ball, goalie, defenders;
     let score = 0;
     let chances = 3;
-    let gameState = 'playing'; // 'playing', 'goal', 'miss', 'over', 'dribble'
+    let defenderScore = 0;
+    let gameState = 'waiting'; // 'waiting', 'playing', 'goal', 'miss', 'over', 'dribble', 'defenderAttack'
     let dribbleWindow = false;
     let dribbleSuccess = false;
     let dribbleFailTimeout = null;
     let ankleBreakerDuration = 1800; // ms
+    let defenderWithBall = null; // null or index of defender
+    let defenderBall = null;
+    let defenderGoalActive = false;
+    let defenderGoalMsgTimeout = null;
 
     // Skills
     let kaiserActive = false;
@@ -219,8 +250,12 @@
       ];
       dribbleWindow = false;
       dribbleSuccess = false;
+      defenderWithBall = null;
+      defenderBall = null;
+      defenderGoalActive = false;
       clearTimeout(dribbleFailTimeout);
       dribbleBtn.style.display = "none";
+      defenderGoalMsg.style.display = "none";
     }
 
     function drawField() {
@@ -247,6 +282,13 @@
       ctx.moveTo(0, field.height / 2);
       ctx.lineTo(field.width, field.height / 2);
       ctx.stroke();
+
+      // Goleira do jogador (na parte inferior)
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(field.goal.x, field.height - field.goal.y - field.goal.h, field.goal.w, field.goal.h);
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(field.goal.x, field.height - field.goal.y - field.goal.h, field.goal.w, field.goal.h + 30);
+      ctx.strokeRect(field.goal.x - 30, field.height - field.goal.y - field.goal.h - 50, field.goal.w + 60, 50);
     }
 
     function drawPlayer() {
@@ -313,7 +355,7 @@
     }
 
     function drawDefenders() {
-      defenders.forEach(def => {
+      defenders.forEach((def, i) => {
         if (def.state === "anklebreaker") {
           ctx.save();
           ctx.globalAlpha = 0.4;
@@ -351,6 +393,19 @@
           ctx.fill();
           ctx.lineWidth = 1;
         }
+        // Desenha bola do zagueiro, se for modo ataque
+        if (defenderWithBall === i && defenderBall) {
+          ctx.beginPath();
+          ctx.arc(defenderBall.x, defenderBall.y, defenderBall.r, 0, 2 * Math.PI);
+          ctx.fillStyle = '#fff';
+          ctx.fill();
+          ctx.strokeStyle = '#222';
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(defenderBall.x + 2, defenderBall.y + 2, 3, 0, 2 * Math.PI);
+          ctx.fillStyle = '#ccc';
+          ctx.fill();
+        }
       });
     }
 
@@ -379,7 +434,8 @@
         if (def.state === "anklebreaker" && now >= def.ankleBreakerEnd) {
           def.state = "normal";
         }
-        if (def.state === "normal" && !ball.moving && !dribbleWindow) {
+        // Só perseguem se não estão "caídos", nem em modo de ataque
+        if (def.state === "normal" && !ball.moving && !dribbleWindow && gameState === "playing" && defenderWithBall === null) {
           let dx = player.x - def.x;
           let dy = player.y - def.y;
           let dist = Math.sqrt(dx*dx + dy*dy);
@@ -398,19 +454,73 @@
       });
     }
 
+    // Defensor ataca o gol do jogador (parte inferior)
+    function updateDefenderAttack() {
+      if (defenderWithBall === null || defenderBall == null) return;
+      let def = defenders[defenderWithBall];
+      // Movimenta o zagueiro e bola para baixo, em direção ao gol do jogador (centro, parte inferior)
+      let targetX = field.goal.x + field.goal.w/2;
+      let targetY = field.height - field.goal.y - field.goal.h/2;
+      let dx = targetX - def.x;
+      let dy = targetY - def.y;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist > 1) {
+        let normX = dx / dist;
+        let normY = dy / dist;
+        def.x += normX * def.speed * 1.1;
+        def.y += normY * def.speed * 1.1;
+        defenderBall.x = def.x;
+        defenderBall.y = def.y + def.r + defenderBall.r + 2;
+      }
+      // Se chegar perto do gol do jogador e centralizado, marca o gol
+      if (
+        def.y >= field.height - field.goal.y - field.goal.h - def.r &&
+        def.x >= field.goal.x &&
+        def.x <= field.goal.x + field.goal.w
+      ) {
+        defenderGoal();
+      }
+      // Se sair do campo por acidente, termina ataque
+      if (
+        def.x < 0 || def.x > field.width ||
+        def.y > field.height || def.y < 0
+      ) {
+        defenderEndAttack();
+      }
+    }
+
+    function defenderGoal() {
+      defenderScore++;
+      defenderGoalMsg.innerText = "GOL DO ZAGUEIRO!";
+      defenderGoalMsg.style.display = "block";
+      clearTimeout(defenderGoalMsgTimeout);
+      defenderGoalMsgTimeout = setTimeout(() => {
+        defenderGoalMsg.style.display = "none";
+      }, 1600);
+      defenderEndAttack();
+    }
+
+    function defenderEndAttack() {
+      defenderWithBall = null;
+      defenderBall = null;
+      defenderGoalActive = false;
+      resetPositions();
+      setTimeout(() => { gameState = "playing"; }, 800);
+    }
+
     // WASD e atalhos
     let keys = {};
     document.addEventListener('keydown', e => {
       if (e.repeat) return;
       if (e.key === 'z' || e.key === 'Z') {
         e.preventDefault();
-        if (!ball.moving && gameState === "playing" && !dribbleWindow) {
+        if (!ball.moving && gameState === "playing" && !dribbleWindow && defenderWithBall === null) {
           kaiserActive = !kaiserActive;
           kaiserBtn.classList.toggle('active', kaiserActive);
         }
       } else if (e.key === 'x' || e.key === 'X') {
         e.preventDefault();
-        if (!ball.moving && gameState === "playing" && !dribbleWindow) {
+        if (!ball.moving && gameState === "playing" && !dribbleWindow && defenderWithBall === null) {
           curvoActive = !curvoActive;
           curvoBtn.classList.toggle('active', curvoActive);
         }
@@ -418,7 +528,7 @@
         e.preventDefault();
         triggerDribble();
       }
-      else if (gameState === 'playing' && !dribbleWindow) {
+      else if (gameState === 'playing' && !dribbleWindow && defenderWithBall === null) {
         if (['w','a','s','d',' '].includes(e.key.toLowerCase())) {
           keys[e.key.toLowerCase()] = true;
           if ((e.key === ' ' || e.key === 'Spacebar') && !ball.moving) {
@@ -434,7 +544,7 @@
     });
 
     function updatePlayer() {
-      if (ball.moving || dribbleWindow) return;
+      if (ball.moving || dribbleWindow || defenderWithBall !== null) return;
       if (keys['a'] && player.x - player.r > 0) player.x -= player.speed;
       if (keys['d'] && player.x + player.r < field.width) player.x += player.speed;
       if (keys['w'] && player.y - player.r > 42) player.y -= player.speed;
@@ -503,7 +613,7 @@
     }
 
     function checkDefenderCollision() {
-      if (ball.moving || dribbleWindow) return;
+      if (ball.moving || dribbleWindow || defenderWithBall !== null) return;
       for (let i=0; i<defenders.length; i++) {
         let def = defenders[i];
         if (def.state === "anklebreaker") continue;
@@ -517,9 +627,16 @@
           dribbleFailTimeout = setTimeout(() => {
             if (!dribbleSuccess) {
               dribbleBtn.style.display = "none";
-              gameState = "miss";
-              chances--;
-              showResult('O zagueiro roubou a bola! 😵');
+              // Zagueiro rouba e vai atacar!
+              defenderWithBall = i;
+              defenderBall = {
+                x: def.x,
+                y: def.y + def.r + 10,
+                r: 10
+              };
+              defenderGoalActive = true;
+              gameState = "defenderAttack";
+              setTimeout(() => {}, 400);
             }
           }, 1100);
           break;
@@ -556,16 +673,16 @@
         if (chances === 0) {
           gameState = 'over';
           draw();
-          scoreboard.innerHTML = `<b>Fim de jogo!</b> Gols: ${score}<br>` +
+          scoreboard.innerHTML = `<b>Fim de jogo!</b> Gols: ${score} | Gols dos zagueiros: ${defenderScore}<br>` +
             (score >= 3
               ? "Você é digno do Blue Lock! 🏆"
               : "Continue treinando para ser o melhor!");
           restartBtn.style.display = 'block';
         } else {
-          scoreboard.innerHTML = msg + `<br>Gols: ${score} | Chances restantes: ${chances}`;
+          scoreboard.innerHTML = msg + `<br>Gols: ${score} | Chances restantes: ${chances} | Gols dos zagueiros: ${defenderScore}`;
           resetPositions();
           setTimeout(() => {
-            scoreboard.innerHTML = `Gols: ${score} | Chances restantes: ${chances}`;
+            scoreboard.innerHTML = `Gols: ${score} | Chances restantes: ${chances} | Gols dos zagueiros: ${defenderScore}`;
             gameState = 'playing';
           }, 1200);
         }
@@ -576,8 +693,8 @@
       drawField();
       drawDefenders();
       drawGoalie();
-      drawPlayer();
-      drawBall();
+      if (defenderWithBall === null) drawPlayer();
+      if (defenderWithBall === null) drawBall();
     }
 
     function gameLoop() {
@@ -587,17 +704,22 @@
         updateDefenders();
         updateBall();
         checkDefenderCollision();
-        scoreboard.innerHTML = `Gols: ${score} | Chances restantes: ${chances}`;
+        scoreboard.innerHTML = `Gols: ${score} | Chances restantes: ${chances} | Gols dos zagueiros: ${defenderScore}`;
       }
       if (gameState === 'dribble') {
         updateGoalie();
         updateDefenders();
         draw();
-        scoreboard.innerHTML = `Drible! Pressione <span class="keyhint">Q</span> ou clique no botão para driblar o zagueiro!<br>Gols: ${score} | Chances restantes: ${chances}`;
-      } else {
-        draw();
+        scoreboard.innerHTML = `Drible! Pressione <span class="keyhint">Q</span> ou clique no botão para driblar o zagueiro!<br>Gols: ${score} | Chances restantes: ${chances} | Gols dos zagueiros: ${defenderScore}`;
       }
-      if (gameState !== 'over') {
+      if (gameState === 'defenderAttack' && defenderWithBall !== null) {
+        updateDefenderAttack();
+        updateGoalie();
+        updateDefenders();
+        draw();
+        scoreboard.innerHTML = `Zagueiro roubou a bola e está atacando!<br>Gols: ${score} | Chances restantes: ${chances} | Gols dos zagueiros: ${defenderScore}`;
+      }
+      if (gameState !== 'over' && gameState !== 'waiting') {
         requestAnimationFrame(gameLoop);
       }
     }
@@ -605,6 +727,7 @@
     restartBtn.onclick = () => {
       score = 0;
       chances = 3;
+      defenderScore = 0;
       gameState = 'playing';
       restartBtn.style.display = 'none';
       resetPositions();
@@ -612,13 +735,13 @@
     };
 
     kaiserBtn.onclick = () => {
-      if (!ball.moving && gameState === "playing" && !dribbleWindow) {
+      if (!ball.moving && gameState === "playing" && !dribbleWindow && defenderWithBall === null) {
         kaiserActive = !kaiserActive;
         kaiserBtn.classList.toggle('active', kaiserActive);
       }
     };
     curvoBtn.onclick = () => {
-      if (!ball.moving && gameState === "playing" && !dribbleWindow) {
+      if (!ball.moving && gameState === "playing" && !dribbleWindow && defenderWithBall === null) {
         curvoActive = !curvoActive;
         curvoBtn.classList.toggle('active', curvoActive);
       }
@@ -650,9 +773,17 @@
       }
     });
 
+    // PLAY BUTTON
+    playBtn.onclick = () => {
+      playBtn.style.display = 'none';
+      gameState = 'playing';
+      resetPositions();
+      gameLoop();
+    };
+
     // Inicializa
     resetPositions();
-    gameLoop();
+    draw();
   </script>
 </body>
 </html>
